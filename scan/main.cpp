@@ -39,7 +39,7 @@ void cpu_exclusive_scan(int* start, int* end, int* output) {
         int twod1 = twod*2;
 	
         for (int i = 0; i < N; i += twod1) {
-	    output[i+twod1-1] = output[i+twod-1] + output[i+twod1-1];
+	        output[i+twod1-1] = output[i+twod-1] + output[i+twod1-1];
         }
     }
 

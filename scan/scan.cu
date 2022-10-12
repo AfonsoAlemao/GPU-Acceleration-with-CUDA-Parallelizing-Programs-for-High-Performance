@@ -27,6 +27,39 @@ static inline int nextPow2(int n) {
     return n;
 }
 
+
+// This is the CUDA "kernel" function that is run on the GPU.  You
+// know this because it is marked as a __global__ function.
+__global__ void
+upsweepPhaseKernel(int twod1, int twod, int* result) {
+
+    // compute overall thread index from position of thread in current
+    // block, and given the block we are in (in this example only a 1D
+    // calculation is needed so the code only looks at the .x terms of
+    // blockDim and threadIdx.
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
+}
+
+// This is the CUDA "kernel" function that is run on the GPU.  You
+// know this because it is marked as a __global__ function.
+__global__ void
+downsweepPhaseKernel(int twod1, int twod, int* result) {
+
+    // compute overall thread index from position of thread in current
+    // block, and given the block we are in (in this example only a 1D
+    // calculation is needed so the code only looks at the .x terms of
+    // blockDim and threadIdx.
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    int tmp = result[index + twod - 1];
+    result[index + twod - 1] = result[index + twod1 - 1];
+    result[index + twod1 - 1] = tmp + result[index + twod1 - 1];
+}
+
+
+
 // exclusive_scan --
 //
 // Implementation of an exclusive scan on global memory array `input`,
@@ -54,6 +87,33 @@ void exclusive_scan(int* input, int N, int* result)
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
 
+    memmove(result, input, N * sizeof(int));
+    const int num_max_blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
+    // upsweep phase
+    for (int twod = 1; twod < N / 2; twod *= 2) {
+        int twod1 = twod*2;
+        if (N/twod1 > num_max_blocks) {
+            printf("Not enough blocks available");
+            return;
+        }
+        else {
+            upsweepPhaseKernel<<<N/twod1, threadsPerBlock>>>(twod1, twod, result);
+        }
+    }
+
+    result[N - 1] = 0;
+
+    // downsweep phase
+    for (int twod = N / 2; twod >= 1; twod /= 2) {
+        int twod1 = twod * 2;
+        if (N/twod1 > num_max_blocks) {
+            printf("Not enough blocks available");
+            return;
+        }
+        else {
+            downsweepPhaseKernel<<<blocks, threadsPerBlock>>>(twod1, twod, result);
+        }
+    }
 
 }
 
