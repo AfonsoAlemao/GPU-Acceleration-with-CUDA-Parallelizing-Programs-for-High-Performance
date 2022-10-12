@@ -111,7 +111,7 @@ void exclusive_scan(int* input, int N, int* result)
         }
         */
         for (int i = 0; i < N; i += twod1) {
-	        output[i+twod1-1] = output[i+twod-1] + output[i+twod1-1];
+	        result[i+twod1-1] = result[i+twod-1] + result[i+twod1-1];
         }
     }
     result[N - 1] = 0;
@@ -129,9 +129,9 @@ void exclusive_scan(int* input, int N, int* result)
         }
         */
         for (int i = 0; i < N; i += twod1) {
-            int tmp = output[i+twod-1];
-            output[i+twod-1] = output[i+twod1-1];
-            output[i+twod1-1] = tmp + output[i+twod1-1];
+            int tmp = result[i+twod-1];
+            result[i+twod-1] = result[i+twod1-1];
+            result[i+twod1-1] = tmp + result[i+twod1-1];
         }
     }
 
