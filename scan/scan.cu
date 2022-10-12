@@ -92,14 +92,13 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
 
     // memmove(result, input, N * sizeof(int));
-    N = nextPow2(N);
     for (int i = 0; i < N; i++) {
         result[i] = input[i];
     }
 
     const int num_max_blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     // upsweep phase
-    for (int twod = 1; twod < N / 2; twod *= 2) {
+    for (int twod = 1; twod < nextpow(N) / 2; twod *= 2) {
         int twod1 = twod*2;
         /*
         if (N/twod1 > num_max_blocks) {
@@ -110,14 +109,16 @@ void exclusive_scan(int* input, int N, int* result)
             upsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
         }
         */
-        for (int i = 0; i < N; i += twod1) {
-	        result[i+twod1-1] = result[i+twod-1] + result[i+twod1-1];
+        for (int i = 0; i < nextpow(N); i += twod1) {
+            if (i+twod-1 < N) {
+	            result[i+twod1-1] = result[i+twod-1] + result[i+twod1-1];
+            }
         }
     }
     result[N - 1] = 0;
 
     // downsweep phase
-    for (int twod = N / 2; twod >= 1; twod /= 2) {
+    for (int twod = nextpow(N) / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
         /*
         if (N/twod1 > num_max_blocks) {
@@ -128,10 +129,12 @@ void exclusive_scan(int* input, int N, int* result)
             downsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
         }
         */
-        for (int i = 0; i < N; i += twod1) {
-            int tmp = result[i+twod-1];
-            result[i+twod-1] = result[i+twod1-1];
-            result[i+twod1-1] = tmp + result[i+twod1-1];
+        for (int i = 0; i < nextpow(N); i += twod1) {
+            if (i+twod-1 < N) {
+                int tmp = result[i+twod-1];
+                result[i+twod-1] = result[i+twod1-1];
+                result[i+twod1-1] = tmp + result[i+twod1-1];
+            }
         }
     }
 
