@@ -107,9 +107,10 @@ void exclusive_scan(int* input, int N, int* result)
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
     
+    const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+
     initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N);
 
-    const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     // upsweep phase
     for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
         int twod1 = twod*2;
