@@ -124,9 +124,9 @@ void exclusive_scan(int* input, int N, int* result)
 
     initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N, nextPow2(N));
 
-    int* resultt = (float*)malloc(N*sizeof(float));
+    int* resultt = (int*)malloc(N*sizeof(int));
     cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
-    for (i = 0; i < N; i++) {
+    for (int i = 0; i < N; i++) {
         printf("Initially: A[%d]=%d", i, resultt);
     }
 
