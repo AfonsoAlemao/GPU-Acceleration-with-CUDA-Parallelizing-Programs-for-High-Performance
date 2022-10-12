@@ -1,0 +1,14 @@
+#compiled code
+####################
+
+#images
+####################
+
+#objets
+####################
+saxpy/objs/
+scan/objs/
+#Makefiles
+####################
+saxpy/Makefile
+scan/Makefile
