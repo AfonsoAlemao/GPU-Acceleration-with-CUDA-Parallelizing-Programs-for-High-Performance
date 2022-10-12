@@ -92,7 +92,6 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
 
     // memmove(result, input, N * sizeof(int));
-    printf("yoyo");
 
     for (int i = 0; i < N; i++) {
         result[i] = input[i];
@@ -137,6 +136,8 @@ void exclusive_scan(int* input, int N, int* result)
 // above. Students should not modify it.
 double cudaScan(int* inarray, int* end, int* resultarray)
 {
+    printf("yoyo");
+
     int* device_result;
     int* device_input;
     int N = end - inarray;  
