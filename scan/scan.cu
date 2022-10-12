@@ -136,8 +136,6 @@ void exclusive_scan(int* input, int N, int* result)
 // above. Students should not modify it.
 double cudaScan(int* inarray, int* end, int* resultarray)
 {
-    printf("yoyo");
-
     int* device_result;
     int* device_input;
     int N = end - inarray;  
