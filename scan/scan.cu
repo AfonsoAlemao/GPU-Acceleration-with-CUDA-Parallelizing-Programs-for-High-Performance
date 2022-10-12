@@ -88,7 +88,7 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
 
     memmove(result, input, N * sizeof(int));
-    const int num_max_blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
+    const int num_max_blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     // upsweep phase
     for (int twod = 1; twod < N / 2; twod *= 2) {
         int twod1 = twod*2;
@@ -97,7 +97,7 @@ void exclusive_scan(int* input, int N, int* result)
             return;
         }
         else {
-            upsweepPhaseKernel<<<N/twod1, threadsPerBlock>>>(twod1, twod, result);
+            upsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result);
         }
     }
 
@@ -111,7 +111,7 @@ void exclusive_scan(int* input, int N, int* result)
             return;
         }
         else {
-            downsweepPhaseKernel<<<blocks, threadsPerBlock>>>(twod1, twod, result);
+            downsweepPhaseKernel<<<N/twod1, threadsPerBlock>>>(twod1, twod, result);
         }
     }
 
