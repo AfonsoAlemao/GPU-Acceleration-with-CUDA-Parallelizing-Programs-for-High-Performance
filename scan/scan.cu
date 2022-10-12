@@ -37,7 +37,7 @@ upsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod;
+    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
 
     if (index + twod1 - 1 < N) {
         result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
@@ -53,7 +53,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod;
+    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
 
     if (index + twod1 - 1 < N) {
         int tmp = result[index + twod - 1];
@@ -120,42 +120,44 @@ void exclusive_scan(int* input, int N, int* result)
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
     
-    const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    const int blocks = (nextPow2(N) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
     initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N, nextPow2(N));
 
     // Testing
-    int* resultt = (int*)malloc(N*sizeof(int));
+    /* int* resultt = (int*)malloc(N*sizeof(int));
     cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
     printf("Initially\n");
-    for (int i = 0; i < N; i++) {
-        printf("%d\n", i, resultt[i]);
+    for (int i = 0; i < nextPow2(N); i++) {
+        printf("%d\n", resultt[i]);
     }
-    printf("\n");
+    printf("\n"); */
 
     // upsweep phase
     for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
         int twod1 = twod*2;
         upsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, nextPow2(N));
+        
+        // Testing
+        /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
+        printf("Iteration %d \n", twod);
+        for (int i = 0; i < nextPow2(N); i++) {
+            printf("A[%d]=%d\n", i, resultt[i]);
+        }
+        printf("\n"); */
     }
 
-    // Testing
-    cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
-    printf("After phase 1\n");
-    for (int i = 0; i < N; i++) {
-        printf("A[%d]=%d\n", i, resultt[i]);
-    }
-    printf("\n");
+    
 
     putZeroInEnd<<<blocks, THREADS_PER_BLOCK>>>(result, nextPow2(N));
 
-    // Testing
-    cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
-    printf("After put 0 in end\n");
-    for (int i = 0; i < N; i++) {
+     // Testing
+    /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
+    printf("End\n");
+    for (int i = 0; i < nextPow2(N); i++) {
         printf("A[%d]=%d\n", i, resultt[i]);
     }
-    printf("\n");
+    printf("\n");*/
 
     // downsweep phase
     for (int twod = nextPow2(N) / 2; twod >= 1; twod /= 2) {
@@ -165,12 +167,12 @@ void exclusive_scan(int* input, int N, int* result)
     }
 
     // Testing
-    cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
+    /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
     printf("End\n");
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < nextPow2(N); i++) {
         printf("A[%d]=%d\n", i, resultt[i]);
     }
-    printf("\n");
+    printf("\n"); */
 
 }
 
