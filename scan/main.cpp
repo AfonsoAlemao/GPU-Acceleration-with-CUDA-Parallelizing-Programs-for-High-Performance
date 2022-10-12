@@ -151,8 +151,6 @@ int main(int argc, char** argv) {
       
         // run CUDA implementation
         //for (int i=0; i<1; i++) {
-        printf("yoyo");
-
         for (int i=0; i<3; i++) {
             if (useThrust)
                 cudaTime = std::min(cudaTime, cudaScanThrust(inarray, inarray+N, resultarray));

@@ -92,7 +92,7 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
 
     // memmove(result, input, N * sizeof(int));
-
+/*
     for (int i = 0; i < N; i++) {
         result[i] = input[i];
     }
@@ -123,7 +123,7 @@ void exclusive_scan(int* input, int N, int* result)
             downsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
         }
     }
-
+*/
 }
 
 
