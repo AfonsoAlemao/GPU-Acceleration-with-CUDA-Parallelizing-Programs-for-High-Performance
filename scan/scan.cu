@@ -111,7 +111,7 @@ void exclusive_scan(int* input, int N, int* result)
             return;
         }
         else {
-            downsweepPhaseKernel<<<N/twod1, threadsPerBlock>>>(twod1, twod, result);
+            downsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result);
         }
     }
 
