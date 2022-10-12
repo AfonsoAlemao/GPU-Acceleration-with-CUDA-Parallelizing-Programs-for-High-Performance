@@ -91,7 +91,11 @@ void exclusive_scan(int* input, int N, int* result)
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
 
-    memmove(result, input, N * sizeof(int));
+    // memmove(result, input, N * sizeof(int));
+    for (i = 0; i < N; i++) {
+        result[i] = input[i];
+    }
+
     printf("yoyo");
 
     const int num_max_blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
