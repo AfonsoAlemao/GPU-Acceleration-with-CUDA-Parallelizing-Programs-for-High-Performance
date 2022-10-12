@@ -31,7 +31,7 @@ static inline int nextPow2(int n) {
 // This is the CUDA "kernel" function that is run on the GPU.  You
 // know this because it is marked as a __global__ function.
 __global__ void
-upsweepPhaseKernel(int twod1, int twod, int* result) {
+upsweepPhaseKernel(int twod1, int twod, int* result, int N) {
 
     // compute overall thread index from position of thread in current
     // block, and given the block we are in (in this example only a 1D
@@ -47,7 +47,7 @@ upsweepPhaseKernel(int twod1, int twod, int* result) {
 // This is the CUDA "kernel" function that is run on the GPU.  You
 // know this because it is marked as a __global__ function.
 __global__ void
-downsweepPhaseKernel(int twod1, int twod, int* result) {
+downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
 
     // compute overall thread index from position of thread in current
     // block, and given the block we are in (in this example only a 1D
@@ -101,7 +101,7 @@ void exclusive_scan(int* input, int N, int* result)
             return;
         }
         else {
-            upsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result);
+            upsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
         }
     }
     printf("yoyo");
@@ -115,7 +115,7 @@ void exclusive_scan(int* input, int N, int* result)
             return;
         }
         else {
-            downsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result);
+            downsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
         }
     }
 
