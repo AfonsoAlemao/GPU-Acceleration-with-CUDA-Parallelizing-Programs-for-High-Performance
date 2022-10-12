@@ -92,7 +92,7 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
 
     // memmove(result, input, N * sizeof(int));
-
+    N = nextPow2(N);
     for (int i = 0; i < N; i++) {
         result[i] = input[i];
     }
