@@ -97,11 +97,11 @@ void exclusive_scan(int* input, int N, int* result)
         result[i] = input[i];
     }
 
-/*
     const int num_max_blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     // upsweep phase
     for (int twod = 1; twod < N / 2; twod *= 2) {
         int twod1 = twod*2;
+        /*
         if (N/twod1 > num_max_blocks) {
             printf("Not enough blocks available");
             return;
@@ -109,12 +109,17 @@ void exclusive_scan(int* input, int N, int* result)
         else {
             upsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
         }
+        */
+        for (int i = 0; i < N; i += twod1) {
+	        output[i+twod1-1] = output[i+twod-1] + output[i+twod1-1];
+        }
     }
     result[N - 1] = 0;
 
     // downsweep phase
     for (int twod = N / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
+        /*
         if (N/twod1 > num_max_blocks) {
             printf("Not enough blocks available");
             return;
@@ -122,8 +127,14 @@ void exclusive_scan(int* input, int N, int* result)
         else {
             downsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
         }
+        */
+        for (int i = 0; i < N; i += twod1) {
+            int tmp = output[i+twod-1];
+            output[i+twod-1] = output[i+twod1-1];
+            output[i+twod1-1] = tmp + output[i+twod1-1];
+        }
     }
-*/
+
 }
 
 
