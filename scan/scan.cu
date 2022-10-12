@@ -92,12 +92,12 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
 
     // memmove(result, input, N * sizeof(int));
-/*
+
     for (int i = 0; i < N; i++) {
         result[i] = input[i];
     }
 
-
+/*
     const int num_max_blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     // upsweep phase
     for (int twod = 1; twod < N / 2; twod *= 2) {
