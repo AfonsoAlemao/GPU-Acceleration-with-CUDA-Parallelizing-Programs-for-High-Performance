@@ -77,6 +77,9 @@ initializeResultKernel(int* input, int* result, int N) {
     if (index < N) {
         result[index] = input[index];
     }
+    else if (index < nextPow2(N)) {
+        result[index] = 0;
+    }
 }
 
 __global__ void
@@ -119,21 +122,21 @@ void exclusive_scan(int* input, int N, int* result)
     
     const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
-    initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N);
+    initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, nextPow2(N));
 
     // upsweep phase
     for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
         int twod1 = twod*2;
-        upsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
+        upsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, nextPow2(N));
     }
 
-    putZeroInEnd<<<blocks, THREADS_PER_BLOCK>>>(result, N);
+    putZeroInEnd<<<blocks, THREADS_PER_BLOCK>>>(result, nextPow2(N));
 
     // downsweep phase
     for (int twod = nextPow2(N) / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
 
-        downsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
+        downsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, nextPow2(N));
     }
 
 }
