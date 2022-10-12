@@ -92,6 +92,8 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
 
     memmove(result, input, N * sizeof(int));
+    printf("yoyo");
+
     const int num_max_blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     // upsweep phase
     for (int twod = 1; twod < N / 2; twod *= 2) {
@@ -104,7 +106,6 @@ void exclusive_scan(int* input, int N, int* result)
             upsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
         }
     }
-    printf("yoyo");
     result[N - 1] = 0;
 
     // downsweep phase
