@@ -129,7 +129,7 @@ void exclusive_scan(int* input, int N, int* result)
     cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
     printf("Initially\n");
     for (int i = 0; i < N; i++) {
-        printf("A[%d]=%d\n", i, resultt[i]);
+        printf("%d\n", i, resultt[i]);
     }
     printf("\n");
 
