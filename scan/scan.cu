@@ -79,6 +79,16 @@ initializeResultKernel(int* input, int* result, int N) {
     }
 }
 
+__global__ void
+putZeroInEnd(int* result, int N) {
+
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (index == N - 1) {
+        result[index] = 0;
+    }
+}
+
 
 // exclusive_scan --
 //
@@ -114,23 +124,16 @@ void exclusive_scan(int* input, int N, int* result)
     // upsweep phase
     for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
         int twod1 = twod*2;
-        /*if (N/twod1 > num_max_blocks) {
-            printf("Not enough blocks available");
-            return;
-        }*/
-        //else {
-            upsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
-        //}
+        upsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
     }
-    result[N - 1] = 0;
+
+    putZeroInEnd<<<blocks, THREADS_PER_BLOCK>>>(result, N);
 
     // downsweep phase
     for (int twod = nextPow2(N) / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
-        
-        
-            downsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
-        
+
+        downsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
     }
 
 }
