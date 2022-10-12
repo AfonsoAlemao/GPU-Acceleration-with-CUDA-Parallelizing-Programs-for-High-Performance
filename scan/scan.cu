@@ -127,11 +127,11 @@ void exclusive_scan(int* input, int N, int* result)
     // Testing
     int* resultt = (int*)malloc(N*sizeof(int));
     cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
-    printf("Initially\n")
+    printf("Initially\n");
     for (int i = 0; i < N; i++) {
         printf("A[%d]=%d\n", i, resultt[i]);
     }
-    printf("\n")
+    printf("\n");
 
     // upsweep phase
     for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
