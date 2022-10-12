@@ -39,7 +39,9 @@ upsweepPhaseKernel(int twod1, int twod, int* result) {
     // blockDim and threadIdx.
     int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod;
 
-    result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
+    if (index + twod1 - 1 < N) {
+        result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
+    }
 }
 
 // This is the CUDA "kernel" function that is run on the GPU.  You
@@ -53,9 +55,11 @@ downsweepPhaseKernel(int twod1, int twod, int* result) {
     // blockDim and threadIdx.
     int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod;
 
-    int tmp = result[index + twod - 1];
-    result[index + twod - 1] = result[index + twod1 - 1];
-    result[index + twod1 - 1] = tmp + result[index + twod1 - 1];
+    if (index + twod1 - 1 < N) {
+        int tmp = result[index + twod - 1];
+        result[index + twod - 1] = result[index + twod1 - 1];
+        result[index + twod1 - 1] = tmp + result[index + twod1 - 1];
+    }
 }
 
 
@@ -100,7 +104,7 @@ void exclusive_scan(int* input, int N, int* result)
             upsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result);
         }
     }
-
+    printf("yoyo");
     result[N - 1] = 0;
 
     // downsweep phase
