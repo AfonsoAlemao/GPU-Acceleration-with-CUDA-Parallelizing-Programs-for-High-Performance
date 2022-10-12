@@ -66,7 +66,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
 // This is the CUDA "kernel" function that is run on the GPU.  You
 // know this because it is marked as a __global__ function.
 __global__ void
-initializeResultKernel(int* input, int* result, int N) {
+initializeResultKernel(int* input, int* result, int N, int nextPow2N) {
 
     // compute overall thread index from position of thread in current
     // block, and given the block we are in (in this example only a 1D
@@ -77,7 +77,7 @@ initializeResultKernel(int* input, int* result, int N) {
     if (index < N) {
         result[index] = input[index];
     }
-    else if (index < nextPow2(N)) {
+    else if (index < nextPow2N) {
         result[index] = 0;
     }
 }
@@ -122,7 +122,7 @@ void exclusive_scan(int* input, int N, int* result)
     
     const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
-    initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, nextPow2(N));
+    initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N, nextPow2(N));
 
     // upsweep phase
     for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
