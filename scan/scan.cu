@@ -107,19 +107,19 @@ void exclusive_scan(int* input, int N, int* result)
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
     
-    initializeResultKernel<<<N, THREADS_PER_BLOCK>>>(input, result, N);
+    initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N);
 
-    const int num_max_blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    const int blocks = (N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     // upsweep phase
     for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
         int twod1 = twod*2;
-        if (N/twod1 > num_max_blocks) {
+        /*if (N/twod1 > num_max_blocks) {
             printf("Not enough blocks available");
             return;
-        }
-        else {
-            upsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
-        }
+        }*/
+        //else {
+            upsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
+        //}
     }
     result[N - 1] = 0;
 
@@ -127,13 +127,9 @@ void exclusive_scan(int* input, int N, int* result)
     for (int twod = nextPow2(N) / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
         
-        if (N/twod1 > num_max_blocks) {
-            printf("Not enough blocks available");
-            return;
-        }
-        else {
-            downsweepPhaseKernel<<<N/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
-        }
+        
+            downsweepPhaseKernel<<<blocks, THREADS_PER_BLOCK>>>(twod1, twod, result, N);
+        
     }
 
 }
