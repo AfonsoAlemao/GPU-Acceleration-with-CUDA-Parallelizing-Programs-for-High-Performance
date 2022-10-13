@@ -37,7 +37,7 @@ upsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
+    long index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
 
     if (index + twod1 - 1 < N) {
         result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
@@ -53,7 +53,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
+    long index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
 
     if (index + twod1 - 1 < N) {
         int tmp = result[index + twod - 1];
@@ -72,7 +72,7 @@ initializeResultKernel(int* input, int* result, int N, int nextPow2N) {
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    long index = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (index < N) {
         result[index] = input[index];
@@ -85,7 +85,7 @@ initializeResultKernel(int* input, int* result, int N, int nextPow2N) {
 __global__ void
 putZeroInEnd(int* result, int N) {
 
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    long index = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (index == N - 1) {
         result[index] = 0;
@@ -137,7 +137,6 @@ void exclusive_scan(int* input, int N, int* result)
     for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
         int twod1 = twod*2;
         upsweepPhaseKernel<<<((nextPow2(N)/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(twod1, twod, result, nextPow2(N));
-        printf("Cuda threads created %d\n", ((nextPow2(N)/twod1) + THREADS_PER_BLOCK - 1)  / THREADS_PER_BLOCK);
         // Testing
         /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
         printf("Iteration %d \n", twod);
