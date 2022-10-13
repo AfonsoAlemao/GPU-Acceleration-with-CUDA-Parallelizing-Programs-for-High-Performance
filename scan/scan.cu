@@ -119,6 +119,7 @@ void exclusive_scan(int* input, int N, int* result)
     // on the CPU.  Your implementation will need to make multiple calls
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
+    printf("%d", nextPow2(N));
     
     const int blocks = (nextPow2(N) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
