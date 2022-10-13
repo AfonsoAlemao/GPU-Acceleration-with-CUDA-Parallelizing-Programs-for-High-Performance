@@ -37,7 +37,7 @@ upsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    long index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
+    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
 
     if (index + twod1 - 1 < N) {
         result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
