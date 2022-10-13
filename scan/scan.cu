@@ -279,6 +279,38 @@ double cudaScanThrust(int* inarray, int* end, int* resultarray) {
 }
 
 
+__global__ void
+isEqualToNext(int N, int nextPow2N, int aux*, int *input) {
+
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (index < N) {
+        if (input[index] == input[index + 1]) {
+            aux[index] = 1;
+        }
+        else {
+            aux[index] = 0;
+        }
+    }
+    else if (index < nextPow2) {
+        aux[index] = 0;
+    }
+}
+
+__global__ void
+getFindRepeats(int N, int nextPow2N, int resultarray*, int device_output*) {
+
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (index < N) {
+        if (resultarray[index] != resultarray[index + 1]) {
+            device_output[resultarray[index]] = index;
+        }
+    }
+
+}
+
+
 // find_repeats --
 //
 // Given an array of integers `device_input`, returns an array of all
@@ -299,6 +331,42 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // must ensure that the results of find_repeats are correct given
     // the actual array length.
 
+    int *aux, *a, *resultarray;
+    a = (int *) malloc(nextPow2(length) * sizeof(int));
+    if (a == NULL) {
+        return -1;
+    }
+
+    cudaMalloc((void **)&aux, nextPow2(length) * sizeof(int));
+    cudaMemcpy(aux, a, nextPow2(length) * sizeof(int), cudaMemcpyHostToDevice);
+
+    const int blocks = (nextPow2(N) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+
+    isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(N, nextPow2(N), aux, device_input);
+
+    resultarray = (int *) malloc(nextPow2(length) * sizeof(int));
+    if (resultarray == NULL) {
+        free(a);
+        return -1;
+    }
+
+    cudaScan(aux, aux + nextPow2(N), resultarray);
+
+    b = (int *) malloc(resultarray[nextPow2(length) - 1] * sizeof(int));
+    if (b == NULL) {
+        free(a);
+        free(resultarray);
+        return -1;
+    }
+
+    cudaMemcpy(device_output, b, resultarray[nextPow2(length) - 1] * sizeof(int), cudaMemcpyHostToDevice);
+
+    getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(N, nextPow2(N), resultarray, device_output);
+
+    cudaFree(aux);
+    free(resultarray);
+    free(a);
+    free(b);
     return 0; 
 }
 
