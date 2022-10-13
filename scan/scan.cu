@@ -136,7 +136,7 @@ void exclusive_scan(int* input, int N, int* result)
     // upsweep phase
     for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
         int twod1 = twod*2;
-        upsweepPhaseKernel<<<nextPow2(N)/thod1, THREADS_PER_BLOCK>>>(twod1, twod, result, nextPow2(N));
+        upsweepPhaseKernel<<<nextPow2(N)/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, nextPow2(N));
         
         // Testing
         /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
@@ -163,7 +163,7 @@ void exclusive_scan(int* input, int N, int* result)
     for (int twod = nextPow2(N) / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
 
-        downsweepPhaseKernel<<<nextPow2(N)/thod1, THREADS_PER_BLOCK>>>(twod1, twod, result, nextPow2(N));
+        downsweepPhaseKernel<<<nextPow2(N)/twod1, THREADS_PER_BLOCK>>>(twod1, twod, result, nextPow2(N));
     }
 
     // Testing
