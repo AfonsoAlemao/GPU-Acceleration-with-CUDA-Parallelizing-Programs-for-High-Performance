@@ -72,7 +72,7 @@ initializeResultKernel(int* input, int* result, int N, int nextPow2N) {
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    long index = blockIdx.x * blockDim.x + threadIdx.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (index < N) {
         result[index] = input[index];
@@ -85,7 +85,7 @@ initializeResultKernel(int* input, int* result, int N, int nextPow2N) {
 __global__ void
 putZeroInEnd(int* result, int N) {
 
-    long index = blockIdx.x * blockDim.x + threadIdx.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (index == N - 1) {
         result[index] = 0;
