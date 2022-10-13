@@ -385,14 +385,14 @@ int find_repeats(int* device_input, int length, int* device_output) {
 
     number_pairs = resultarray[nextPow2var - 1]; 
 
-    /* cudaMemcpy(device_output, b, number_pairs * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(device_output, b, number_pairs * sizeof(int), cudaMemcpyHostToDevice);
 
     cudaMalloc((void **)&device_resultarray, nextPow2var * sizeof(int));
     cudaMemcpy(device_resultarray, resultarray, nextPow2var* sizeof(int), cudaMemcpyHostToDevice);
     
 
     getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_resultarray, aux, device_output);
-    */
+
      // Testing
     /* cudaMemcpy(resultt, device_output, number_pairs * sizeof(int), cudaMemcpyDeviceToHost);
     printf("Device output\n");
