@@ -37,11 +37,14 @@ upsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
-
-    if (index + twod1 - 1 < N && index + twod - 1 < N) {
-        result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
+    int index = (blockIdx.x * blockDim.x + threadIdx.x);
+    if (index < N/twod1){
+        index *= twod1;
+        if (index + twod1 - 1 < N) {
+            result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
+        }
     }
+
 }
 
 // This is the CUDA "kernel" function that is run on the GPU.  You
@@ -53,12 +56,14 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
-
-    if (index + twod1 - 1 < N && index + twod - 1 < N) {
-        int tmp = result[index + twod - 1];
-        result[index + twod - 1] = result[index + twod1 - 1];
-        result[index + twod1 - 1] = tmp + result[index + twod1 - 1];
+    int index = (blockIdx.x * blockDim.x + threadIdx.x);
+    if (index < N/twod1){
+        index *= twod1;
+        if (index + twod - 1 < N) {
+            int tmp = result[index + twod - 1];
+            result[index + twod - 1] = result[index + twod1 - 1];
+            result[index + twod1 - 1] = tmp + result[index + twod1 - 1];
+        }
     }
 }
 
@@ -122,6 +127,7 @@ void exclusive_scan(int* input, int N, int* result)
     
     const int blocks = (nextPow2(N) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
+
     initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N, nextPow2(N));
 
     // Testing
@@ -136,7 +142,14 @@ void exclusive_scan(int* input, int N, int* result)
     // upsweep phase
     for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
         int twod1 = twod*2;
-        upsweepPhaseKernel<<<((nextPow2(N)/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(twod1, twod, result, nextPow2(N));
+        int num_block_iter = ((nextPow2(N)/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+        int threads_per_block = THREADS_PER_BLOCK;
+        if (num_block_iter == 1) {
+            threads_per_block = (nextPow2(N)/twod1);
+        }
+        upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, nextPow2(N));
+
+
         // Testing
         /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
         printf("Iteration %d \n", twod);
@@ -161,8 +174,12 @@ void exclusive_scan(int* input, int N, int* result)
     // downsweep phase
     for (int twod = nextPow2(N) / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
-
-        downsweepPhaseKernel<<<((nextPow2(N)/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(twod1, twod, result, nextPow2(N));
+        int num_block_iter = ((nextPow2(N)/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+        int threads_per_block = THREADS_PER_BLOCK;
+        if (num_block_iter == 1) {
+            threads_per_block = (nextPow2(N)/twod1);
+        }
+        downsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, nextPow2(N));
     }
 
     // Testing
