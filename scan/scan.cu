@@ -298,12 +298,12 @@ isEqualToNext(int N, int nextPow2N, int* aux, int* input) {
 }
 
 __global__ void
-getFindRepeats(int N, int nextPow2N, int* resultarray, int* device_output) {
+getFindRepeats(int N, int nextPow2N, int* resultarray, int* aux, int* device_output) {
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (index < N - 1) {
-        if (resultarray[index] != resultarray[index + 1]) {
+        if (aux[index] == 1) {
             device_output[resultarray[index] ] = index;
         }
     }
@@ -331,72 +331,72 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // must ensure that the results of find_repeats are correct given
     // the actual array length.
 
-
+    int nextPow2var = nextPow2(length);
     // Testing
-    /* int* resultt = (int*)malloc(nextPow2(length)*sizeof(int));
-    cudaMemcpy(resultt, device_input, nextPow2(length) * sizeof(int), cudaMemcpyDeviceToHost);
+    /* int* resultt = (int*)malloc(nextPow2var*sizeof(int));
+    cudaMemcpy(resultt, device_input, nextPow2var * sizeof(int), cudaMemcpyDeviceToHost);
     printf("Initialy\n");
-    for (int i = 0; i < nextPow2(length); i++) {
+    for (int i = 0; i < nextPow2var; i++) {
         printf("A[%d]=%d\n", i, resultt[i]);
     }
     printf("\n"); */
 
     int *aux, *a, *b, *resultarray, *device_resultarray, number_pairs;
-    a = (int *) malloc(nextPow2(length) * sizeof(int));
+    a = (int *) malloc(nextPow2var * sizeof(int));
     if (a == NULL) {
         return -1;
     }
 
-    cudaMalloc((void **)&aux, nextPow2(length) * sizeof(int));
-    cudaMemcpy(aux, a, nextPow2(length) * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMalloc((void **)&aux, nextPow2var * sizeof(int));
+    cudaMemcpy(aux, a, nextPow2var * sizeof(int), cudaMemcpyHostToDevice);
 
-    const int blocks = (nextPow2(length) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
-    isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2(length), aux, device_input);
+    isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, aux, device_input);
     
     // Testing
-    /* cudaMemcpy(resultt, aux, nextPow2(length) * sizeof(int), cudaMemcpyDeviceToHost);
+    /* cudaMemcpy(resultt, aux, nextPow2var * sizeof(int), cudaMemcpyDeviceToHost);
     printf("IsEqualToNext\n");
-    for (int i = 0; i < nextPow2(length); i++) {
+    for (int i = 0; i < nextPow2var; i++) {
         printf("A[%d]=%d\n", i, resultt[i]);
     }
     printf("\n"); */ 
 
-    resultarray = (int *) malloc(nextPow2(length) * sizeof(int));
+    resultarray = (int *) malloc(nextPow2var * sizeof(int));
     if (resultarray == NULL) {
         cudaFree(aux);
         free(a);
         return -1;
     }
 
-    cudaScan(aux, aux + nextPow2(length), resultarray);
+    cudaScan(aux, aux + nextPow2var, resultarray);
 
-    b = (int *) malloc(resultarray[nextPow2(length) - 1] * sizeof(int));
+    b = (int *) malloc(resultarray[nextPow2var - 1] * sizeof(int));
     if (b == NULL) {
         cudaFree(aux);
         free(a);
         free(resultarray);
         return -1;
     }
-    /* for (int i = 0; i < nextPow2(length); i++){
+    /* for (int i = 0; i < nextPow2var; i++){
         printf("Ressultarray: %d\n", resultarray[i]);
     }
     printf("\n"); */
 
-    number_pairs = resultarray[nextPow2(length) - 1]; 
+    number_pairs = resultarray[nextPow2var - 1]; 
 
-    cudaMemcpy(device_output, b, resultarray[nextPow2(length) - 1] * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(device_output, b, number_pairs * sizeof(int), cudaMemcpyHostToDevice);
 
-    cudaMalloc((void **)&device_resultarray, nextPow2(length) * sizeof(int));
-    cudaMemcpy(device_resultarray, resultarray, nextPow2(length)* sizeof(int), cudaMemcpyHostToDevice);
+    cudaMalloc((void **)&device_resultarray, nextPow2var * sizeof(int));
+    cudaMemcpy(device_resultarray, resultarray, nextPow2var* sizeof(int), cudaMemcpyHostToDevice);
     
 
-    getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2(length), device_resultarray, device_output);
+    getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_resultarray, aux, device_output);
 
      // Testing
-    /* cudaMemcpy(resultt, device_output, resultarray[nextPow2(length) - 1] * sizeof(int), cudaMemcpyDeviceToHost);
+    /* cudaMemcpy(resultt, device_output, number_pairs * sizeof(int), cudaMemcpyDeviceToHost);
     printf("Device output\n");
-    for (int i = 0; i < resultarray[nextPow2(length) - 1]; i++) {
+    for (int i = 0; i < resultarray[nextPow2var - 1]; i++) {
         printf("A[%d]=%d\n", i, resultt[i]);
     }
     printf("\n"); */ 
