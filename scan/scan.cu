@@ -334,7 +334,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // the actual array length.
 
     int nextPow2var = nextPow2(length);
-    int *aux, *resultarray, *device_resultarray, number_pairs;
+    int *resultarray, *device_resultarray, number_pairs;
     const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
     // Testing
@@ -360,7 +360,6 @@ int find_repeats(int* device_input, int length, int* device_output) {
 
     resultarray = (int *) malloc(nextPow2var * sizeof(int));
     if (resultarray == NULL) {
-        cudaFree(aux);
         return -1;
     }
 
@@ -388,7 +387,6 @@ int find_repeats(int* device_input, int length, int* device_output) {
     printf("\n"); */ 
 
     cudaFree(device_resultarray);
-    //cudaFree(aux);
     free(resultarray);
     return number_pairs; 
 }
