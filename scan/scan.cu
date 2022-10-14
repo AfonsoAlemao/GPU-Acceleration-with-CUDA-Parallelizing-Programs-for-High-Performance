@@ -327,7 +327,6 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // must ensure that the results of find_repeats are correct given
     // the actual array length.
 
-    int nextPow2var = nextPow2(length);
     const int blocks = (length + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     int *resultarray;
 
