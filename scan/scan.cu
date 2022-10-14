@@ -282,11 +282,21 @@ isEqualToNext(int N, int* aux, int* input) {
     __syncthreads();
 
     if (index < N - 1) {
-        if (support[threadIdx.x] == support[threadIdx.x + 1]) {
-            aux[index] = 1;
+        if (threadIdx.x >= THREADS_PER_BLOCK - 1) {
+            if (input[index] == input[index + 1]) {
+                aux[index] = 1;
+            }
+            else {
+                aux[index] = 0;
+            }
         }
         else {
-            aux[index] = 0;
+            if (support[threadIdx.x] == support[threadIdx.x + 1]) {
+                aux[index] = 1;
+            }
+            else {
+                aux[index] = 0;
+            }
         }
     }
     
