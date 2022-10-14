@@ -356,30 +356,24 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */ 
 
-    resultarray = (int *) malloc(nextPow2var * sizeof(int));
-    if (resultarray == NULL) {
-        return -1;
-    }
+    //resultarray = (int *) malloc(nextPow2var * sizeof(int));
+    //if (resultarray == NULL) {
+    //    return -1;
+    //}
 
-    cudaScan(device_output, device_output + nextPow2var, resultarray);
+    cudaScan(device_output, device_output + nextPow2var, device_input);
 
-    number_pairs = resultarray[nextPow2var - 1]; 
+    number_pairs = device_input[nextPow2var - 1]; 
 
     /* for (int i = 0; i < nextPow2var; i++){
         printf("Ressultarray: %d\n", resultarray[i]);
     }
     printf("\n"); */
 
-    double startTime = CycleTimer::currentSeconds();
+    //cudaMalloc((void **)&device_resultarray, nextPow2var * sizeof(int));
+    //cudaMemcpy(device_resultarray, resultarray, nextPow2var* sizeof(int), cudaMemcpyHostToDevice);
 
-    cudaMalloc((void **)&device_resultarray, nextPow2var * sizeof(int));
-    cudaMemcpy(device_resultarray, resultarray, nextPow2var* sizeof(int), cudaMemcpyHostToDevice);
-    
-    double endTime = CycleTimer::currentSeconds();
-    double overallDuration = endTime - startTime;
-    printf("Effective BW by CUDA saxpy: %.3f ms\n", 1000.f * overallDuration);
-
-    getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_resultarray, device_output);
+    getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_input, device_output);
 
      // Testing
     /* cudaMemcpy(resultt, device_output, number_pairs * sizeof(int), cudaMemcpyDeviceToHost);
@@ -389,8 +383,8 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */ 
 
-    cudaFree(device_resultarray);
-    free(resultarray);
+    //cudaFree(device_resultarray);
+    //free(resultarray);
     return number_pairs; 
 }
 
