@@ -276,14 +276,14 @@ __global__ void
 isEqualToNext(int N, int* aux, int* input) {
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    __shared__ float support[THREADS_PER_BLOCK];
+    __shared__ int support[THREADS_PER_BLOCK];
     
     support[threadIdx.x] = input[index];
     __syncthreads();
 
     if (index < N - 1) {
-        if (threadIdx.x >= THREADS_PER_BLOCK - 1) {
-            if (input[index] == input[index + 1]) {
+        if (threadIdx.x < THREADS_PER_BLOCK - 1) {
+            if (support[threadIdx.x] == support[threadIdx.x + 1]) {
                 aux[index] = 1;
             }
             else {
@@ -291,7 +291,7 @@ isEqualToNext(int N, int* aux, int* input) {
             }
         }
         else {
-            if (support[threadIdx.x] == support[threadIdx.x + 1]) {
+            if (input[index] == input[index + 1]) {
                 aux[index] = 1;
             }
             else {
