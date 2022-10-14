@@ -121,7 +121,7 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
     
     const int blocks = (nextPow2(N) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-    int nextPow2var = nextPow2(length);
+    int nextPow2var = nextPow2(N);
 
     initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N, nextPow2var);
 
