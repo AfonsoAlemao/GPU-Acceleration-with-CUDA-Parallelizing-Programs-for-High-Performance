@@ -298,13 +298,15 @@ isEqualToNext(int N, int nextPow2N, int* aux, int* input) {
 }
 
 __global__ void
-getFindRepeats(int N, int nextPow2N, int* resultarray, int* aux, int* device_output) {
+getFindRepeats(int N, int nextPow2N, int* resultarray, int* device_output) {
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int aux = 0;
 
     if (index < N - 1) {
-        if (aux[index] == 1) {
-            device_output[resultarray[index] ] = index;
+        auxiliar = result_array[index];
+        if (auxiliar != result_array[index + 1]) {
+            device_output[auxiliar] = index;
         }
     }
 
@@ -344,9 +346,9 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */
 
-    cudaMalloc((void **)&aux, nextPow2var * sizeof(int));
+    //cudaMalloc((void **)&aux, nextPow2var * sizeof(int));
 
-    isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, aux, device_input);
+    isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_output, device_input);
     
     // Testing
     /* cudaMemcpy(resultt, aux, nextPow2var * sizeof(int), cudaMemcpyDeviceToHost);
@@ -362,7 +364,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
         return -1;
     }
 
-    cudaScan(aux, aux + nextPow2var, resultarray);
+    cudaScan(device_output, device_output + nextPow2var, resultarray);
 
     number_pairs = resultarray[nextPow2var - 1]; 
 
@@ -375,7 +377,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     cudaMemcpy(device_resultarray, resultarray, nextPow2var* sizeof(int), cudaMemcpyHostToDevice);
     
 
-    getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_resultarray, aux, device_output);
+    getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_resultarray, device_output);
 
      // Testing
     /* cudaMemcpy(resultt, device_output, number_pairs * sizeof(int), cudaMemcpyDeviceToHost);
@@ -386,7 +388,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     printf("\n"); */ 
 
     cudaFree(device_resultarray);
-    cudaFree(aux);
+    //cudaFree(aux);
     free(resultarray);
     return number_pairs; 
 }
