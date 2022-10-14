@@ -273,18 +273,23 @@ double cudaScanThrust(int* inarray, int* end, int* resultarray) {
 
 
 __global__ void
-isEqualToNext(int N, int* aux, int* input) {
+isEqualToNext(int N, int* aux, int* input, int THREADS_PER_BLK) {
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
+    __shared__ float support[THREADS_PER_BLK];
+    
+    support[threadIdx.x] = input[index];
+    __syncthreads();
 
     if (index < N - 1) {
-        if (input[index] == input[index + 1]) {
+        if (support[threadIdx.x] == support[threadIdx.x + 1]) {
             aux[index] = 1;
         }
         else {
             aux[index] = 0;
         }
     }
+    
 }
 
 __global__ void
@@ -339,7 +344,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */
 
-    isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, device_output, device_input);
+    isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, device_output, device_input, THREADS_PER_BLOCK);
     
     // Testing
     /* cudaMemcpy(resultt, device_output, nextPow2var * sizeof(int), cudaMemcpyDeviceToHost);
