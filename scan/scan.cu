@@ -393,7 +393,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
         return -1;
     }
     switchlast_first<<<1, 1>>>(nextPow2var, device_input);
-    cudaMemcpy(resultarray, device_input, nextPow2var* sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(resultarray, device_input, 1* sizeof(int), cudaMemcpyDeviceToHost);
     return resultarray[0]; 
 }
 
