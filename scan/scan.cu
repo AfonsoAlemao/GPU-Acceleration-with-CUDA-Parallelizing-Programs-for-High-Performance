@@ -280,7 +280,7 @@ isEqualToNext(int N, int* aux, int* input) {
     
     support[threadIdx.x] = input[index];
     if (threadIdx.x < 1) {
-        support[THREADS_PER_BLK + threadIdx.x] = input[index + THREADS_PER_BLOCK];
+        support[THREADS_PER_BLOCK + threadIdx.x] = input[index + THREADS_PER_BLOCK];
     }
 
     __syncthreads();
@@ -306,7 +306,7 @@ getFindRepeats(int N, int* resultarray, int* device_output) {
     
     support[threadIdx.x] = resultarray[index];
     if (threadIdx.x < 1) {
-        support[THREADS_PER_BLK + threadIdx.x] = input[index + THREADS_PER_BLOCK];
+        support[THREADS_PER_BLOCK + threadIdx.x] = resultarray[index + THREADS_PER_BLOCK];
     }
 
     __syncthreads();
