@@ -341,16 +341,16 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */
 
-    int *aux, *a, *b, *resultarray, *device_resultarray, number_pairs;
+    int *aux, *a, *resultarray, *device_resultarray, number_pairs;
     const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
-    a = (int *) malloc(nextPow2var * sizeof(int));
-    if (a == NULL) {
-        return -1;
-    }
+    //a = (int *) malloc(nextPow2var * sizeof(int));
+    //if (a == NULL) {
+    //    return -1;
+    //}
 
     cudaMalloc((void **)&aux, nextPow2var * sizeof(int));
-    cudaMemcpy(aux, a, nextPow2var * sizeof(int), cudaMemcpyHostToDevice);
+    // cudaMemcpy(aux, a, nextPow2var * sizeof(int), cudaMemcpyHostToDevice);
 
     isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, aux, device_input);
     
@@ -379,7 +379,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     printf("\n"); */
 
 
-    cudaMemcpy(device_output, a, number_pairs * sizeof(int), cudaMemcpyHostToDevice);
+    //cudaMemcpy(device_output, a, number_pairs * sizeof(int), cudaMemcpyHostToDevice);
 
     cudaMalloc((void **)&device_resultarray, nextPow2var * sizeof(int));
     cudaMemcpy(device_resultarray, resultarray, nextPow2var* sizeof(int), cudaMemcpyHostToDevice);
@@ -399,7 +399,6 @@ int find_repeats(int* device_input, int length, int* device_output) {
     cudaFree(aux);
     free(resultarray);
     free(a);
-    free(b);
     return number_pairs; 
 }
 
