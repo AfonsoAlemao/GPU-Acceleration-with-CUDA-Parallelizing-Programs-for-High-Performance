@@ -301,11 +301,11 @@ __global__ void
 getFindRepeats(int N, int nextPow2N, int* resultarray, int* device_output) {
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    int aux = 0;
+    int auxiliar = 0;
 
     if (index < N - 1) {
         auxiliar = result_array[index];
-        if (auxiliar != result_array[index + 1]) {
+        if (auxiliar != resultarray[index + 1]) {
             device_output[auxiliar] = index;
         }
     }
