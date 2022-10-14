@@ -377,7 +377,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     
     double endTime = CycleTimer::currentSeconds();
     double overallDuration = endTime - startTime;
-    printf("Effective BW by CUDA saxpy: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration, GBPerSec(totalBytes, overallDuration));
+    printf("Effective BW by CUDA saxpy: %.3f ms\n", 1000.f * overallDuration);
 
     getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_resultarray, device_output);
 
