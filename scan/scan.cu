@@ -61,8 +61,9 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
         index *= twod1;
         if (index + twod - 1 < N) {
             int tmp = result[index + twod - 1];
-            result[index + twod - 1] = result[index + twod1 - 1];
-            result[index + twod1 - 1] = tmp + result[index + twod1 - 1];
+            int aux = result[index + twod1 - 1];
+            result[index + twod - 1] = aux;
+            result[index + twod1 - 1] = tmp + aux;
         }
     }
 }
@@ -308,7 +309,6 @@ getFindRepeats(int N, int* resultarray, int* device_output) {
     if (threadIdx.x < 1) {
         support[THREADS_PER_BLOCK + threadIdx.x] = resultarray[index + THREADS_PER_BLOCK];
     }
-
     __syncthreads();
 
     if (index < N - 1) {
