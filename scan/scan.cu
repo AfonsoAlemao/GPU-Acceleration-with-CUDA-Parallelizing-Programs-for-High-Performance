@@ -89,12 +89,7 @@ initializeResultKernel(int* input, int* result, int N, int nextPow2N) {
 
 __global__ void
 putZeroInEnd(int* result, int N) {
-
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (index == N - 1) {
-        result[index] = 0;
-    }
+    result[N - 1] = 0;
 }
 
 
@@ -159,9 +154,7 @@ void exclusive_scan(int* input, int N, int* result)
         printf("\n"); */
     }
 
-    
-
-    putZeroInEnd<<<blocks, THREADS_PER_BLOCK>>>(result, nextPow2(N));
+    putZeroInEnd<<<1, 1>>>(result, nextPow2(N));
 
      // Testing
     /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
@@ -360,20 +353,12 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */ 
 
-    //resultarray = (int *) malloc(nextPow2var * sizeof(int));
-    //if (resultarray == NULL) {
-    //    return -1;
-    //}
-
     cudaScan(device_output, device_output + nextPow2var, device_input);
 
     /* for (int i = 0; i < nextPow2var; i++){
         printf("Ressultarray: %d\n", resultarray[i]);
     }
     printf("\n"); */
-
-    //cudaMalloc((void **)&device_resultarray, nextPow2var * sizeof(int));
-    //cudaMemcpy(device_resultarray, resultarray, nextPow2var* sizeof(int), cudaMemcpyHostToDevice);
 
     getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_input, device_output);
 
@@ -384,9 +369,6 @@ int find_repeats(int* device_input, int length, int* device_output) {
         printf("A[%d]=%d\n", i, resultt[i]);
     }
     printf("\n"); */ 
-
-    //cudaFree(device_resultarray);
-    //free(resultarray);
 
     resultarray = (int*)malloc(1*sizeof(int));
     if (resultarray == NULL) {
