@@ -314,7 +314,7 @@ getFindRepeats(int N, int nextPow2N, int* resultarray, int* device_output) {
 
 __global__ void
 switchlast_first(int nextPow2N, int* device_input) {    
-    device_input[0] = device_input[nextPow2 - 1];
+    device_input[0] = device_input[nextPow2N - 1];
 }
 
 // find_repeats --
