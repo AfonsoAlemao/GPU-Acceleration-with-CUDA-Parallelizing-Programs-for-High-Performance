@@ -90,12 +90,12 @@ void saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultar
     cudaMemcpy(device_result, resultarray, N*sizeof(float), cudaMemcpyHostToDevice);
 
    
-    // double startTime2 = CycleTimer::currentSeconds();
+    double startTime2 = CycleTimer::currentSeconds();
     // run CUDA kernel. (notice the <<< >>> brackets indicating a CUDA
     // kernel launch) Execution on the GPU occurs here.
     saxpy_kernel<<<blocks, threadsPerBlock>>>(N, alpha, device_x, device_y, device_result);
-    // cudaDeviceSynchronize();
-    // double endTime2 = CycleTimer::currentSeconds(); 
+    cudaDeviceSynchronize();
+    double endTime2 = CycleTimer::currentSeconds(); 
 
     //
     // STUDENTS TODO: copy result from GPU back to CPU using cudaMemcpy
@@ -113,11 +113,11 @@ void saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultar
 		errCode, cudaGetErrorString(errCode));
     }
 
-    double overallDuration = endTime - startTime;
-    printf("Effective BW by CUDA saxpy: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration, GBPerSec(totalBytes, overallDuration));
+    // double overallDuration = endTime - startTime;
+    // printf("Effective BW by CUDA saxpy: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration, GBPerSec(totalBytes, overallDuration));
 
-    // double overallDuration2 = endTime2 - startTime2;
-    // printf("Effective BW by CUDA saxpy: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration2, GBPerSec(totalBytes, overallDuration2));
+    double overallDuration2 = endTime2 - startTime2;
+    printf("Effective BW by CUDA saxpy: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration2, GBPerSec(totalBytes, overallDuration2));
 
     //
     // STUDENTS TODO: free memory buffers on the GPU using cudaFree
