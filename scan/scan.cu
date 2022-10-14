@@ -276,27 +276,21 @@ __global__ void
 isEqualToNext(int N, int* aux, int* input) {
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    __shared__ int support[THREADS_PER_BLOCK];
+    __shared__ int support[THREADS_PER_BLOCK + 1];
     
     support[threadIdx.x] = input[index];
+    if (threadIdx.x < 1) {
+        support[THREADS_PER_BLK + threadIdx.x] = input[index + THREADS_PER_BLOCK];
+    }
+
     __syncthreads();
 
     if (index < N - 1) {
-        if (threadIdx.x < THREADS_PER_BLOCK - 1) {
-            if (support[threadIdx.x] == support[threadIdx.x + 1]) {
-                aux[index] = 1;
-            }
-            else {
-                aux[index] = 0;
-            }
+        if (support[threadIdx.x] == support[threadIdx.x + 1]) {
+            aux[index] = 1;
         }
         else {
-            if (input[index] == input[index + 1]) {
-                aux[index] = 1;
-            }
-            else {
-                aux[index] = 0;
-            }
+            aux[index] = 0;
         }
     }
     
@@ -308,23 +302,19 @@ getFindRepeats(int N, int* resultarray, int* device_output) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int auxiliar = 0;
 
-    __shared__ int support[THREADS_PER_BLOCK];
+    __shared__ int support[THREADS_PER_BLOCK + 1];
     
     support[threadIdx.x] = resultarray[index];
+    if (threadIdx.x < 1) {
+        support[THREADS_PER_BLK + threadIdx.x] = input[index + THREADS_PER_BLOCK];
+    }
+
     __syncthreads();
 
     if (index < N - 1) {
-        if (threadIdx.x < THREADS_PER_BLOCK - 1) {
-            auxiliar = support[threadIdx.x];
-            if (auxiliar != support[threadIdx.x + 1]) {
-                device_output[auxiliar] = index;
-            }
-        }
-        else {
-            auxiliar = resultarray[index];
-            if (auxiliar != resultarray[index + 1]) {
-                device_output[auxiliar] = index;
-            }
+        auxiliar = support[threadIdx.x];
+        if (auxiliar != support[threadIdx.x + 1]) {
+            device_output[auxiliar] = index;
         }
     }
 
