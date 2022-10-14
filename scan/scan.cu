@@ -346,12 +346,10 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */
 
-    //cudaMalloc((void **)&aux, nextPow2var * sizeof(int));
-
     isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_output, device_input);
     
     // Testing
-    /* cudaMemcpy(resultt, aux, nextPow2var * sizeof(int), cudaMemcpyDeviceToHost);
+    /* cudaMemcpy(resultt, device_output, nextPow2var * sizeof(int), cudaMemcpyDeviceToHost);
     printf("IsEqualToNext\n");
     for (int i = 0; i < nextPow2var; i++) {
         printf("A[%d]=%d\n", i, resultt[i]);
@@ -372,9 +370,14 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */
 
+    double startTime = CycleTimer::currentSeconds();
+
     cudaMalloc((void **)&device_resultarray, nextPow2var * sizeof(int));
     cudaMemcpy(device_resultarray, resultarray, nextPow2var* sizeof(int), cudaMemcpyHostToDevice);
     
+    double endTime = CycleTimer::currentSeconds();
+    double overallDuration = endTime - startTime;
+    printf("Effective BW by CUDA saxpy: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration, GBPerSec(totalBytes, overallDuration));
 
     getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_resultarray, device_output);
 
