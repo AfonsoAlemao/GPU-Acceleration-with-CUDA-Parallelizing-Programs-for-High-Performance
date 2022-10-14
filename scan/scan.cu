@@ -121,9 +121,9 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
     
     const int blocks = (nextPow2(N) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    int nextPow2var = nextPow2(length);
 
-
-    initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N, nextPow2(N));
+    initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N, nextPow2var);
 
     // Testing
     /* int* resultt = (int*)malloc(N*sizeof(int));
@@ -135,14 +135,14 @@ void exclusive_scan(int* input, int N, int* result)
     printf("\n"); */
 
     // upsweep phase
-    for (int twod = 1; twod < nextPow2(N) / 2; twod *= 2) {
+    for (int twod = 1; twod < nextPow2var / 2; twod *= 2) {
         int twod1 = twod*2;
-        int num_block_iter = ((nextPow2(N)/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+        int num_block_iter = ((nextPow2var/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
         int threads_per_block = THREADS_PER_BLOCK;
         if (num_block_iter == 1) {
-            threads_per_block = (nextPow2(N)/twod1);
+            threads_per_block = (nextPow2var/twod1);
         }
-        upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, nextPow2(N));
+        upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, nextPow2var);
 
 
         // Testing
@@ -154,7 +154,7 @@ void exclusive_scan(int* input, int N, int* result)
         printf("\n"); */
     }
 
-    putZeroInEnd<<<1, 1>>>(result, nextPow2(N));
+    putZeroInEnd<<<1, 1>>>(result, nextPow2var);
 
      // Testing
     /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
@@ -165,14 +165,14 @@ void exclusive_scan(int* input, int N, int* result)
     printf("\n");*/
 
     // downsweep phase
-    for (int twod = nextPow2(N) / 2; twod >= 1; twod /= 2) {
+    for (int twod = nextPow2var / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
-        int num_block_iter = ((nextPow2(N)/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+        int num_block_iter = ((nextPow2var/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
         int threads_per_block = THREADS_PER_BLOCK;
         if (num_block_iter == 1) {
-            threads_per_block = (nextPow2(N)/twod1);
+            threads_per_block = (nextPow2var/twod1);
         }
-        downsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, nextPow2(N));
+        downsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, nextPow2var);
     }
 
     // Testing
@@ -273,7 +273,7 @@ double cudaScanThrust(int* inarray, int* end, int* resultarray) {
 
 
 __global__ void
-isEqualToNext(int N, int nextPow2N, int* aux, int* input) {
+isEqualToNext(int N, int* aux, int* input) {
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -285,13 +285,10 @@ isEqualToNext(int N, int nextPow2N, int* aux, int* input) {
             aux[index] = 0;
         }
     }
-    else if (index < nextPow2N) {
-        aux[index] = 0;
-    }
 }
 
 __global__ void
-getFindRepeats(int N, int nextPow2N, int* resultarray, int* device_output) {
+getFindRepeats(int N, int* resultarray, int* device_output) {
 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int auxiliar = 0;
@@ -306,8 +303,8 @@ getFindRepeats(int N, int nextPow2N, int* resultarray, int* device_output) {
 }
 
 __global__ void
-switchlast_first(int nextPow2N, int* device_input) {    
-    device_input[0] = device_input[nextPow2N - 1];
+switchlast_first(int length, int* device_input) {    
+    device_input[0] = device_input[length - 1];
 }
 
 // find_repeats --
@@ -331,7 +328,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // the actual array length.
 
     int nextPow2var = nextPow2(length);
-    const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    const int blocks = (length + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     int *resultarray;
 
     // Testing
@@ -343,7 +340,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */
 
-    isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_output, device_input);
+    isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, device_output, device_input);
     
     // Testing
     /* cudaMemcpy(resultt, device_output, nextPow2var * sizeof(int), cudaMemcpyDeviceToHost);
@@ -353,14 +350,14 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */ 
 
-    cudaScan(device_output, device_output + nextPow2var, device_input);
+    cudaScan(device_output, device_output + length, device_input);
 
     /* for (int i = 0; i < nextPow2var; i++){
         printf("Ressultarray: %d\n", resultarray[i]);
     }
     printf("\n"); */
 
-    getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, nextPow2var, device_input, device_output);
+    getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, device_input, device_output);
 
      // Testing
     /* cudaMemcpy(resultt, device_output, number_pairs * sizeof(int), cudaMemcpyDeviceToHost);
@@ -374,7 +371,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     if (resultarray == NULL) {
         return -1;
     }
-    switchlast_first<<<1, 1>>>(nextPow2var, device_input);
+    switchlast_first<<<1, 1>>>(length, device_input);
     cudaMemcpy(resultarray, device_input, 1* sizeof(int), cudaMemcpyDeviceToHost);
     return resultarray[0]; 
 }
