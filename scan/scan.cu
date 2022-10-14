@@ -312,6 +312,10 @@ getFindRepeats(int N, int nextPow2N, int* resultarray, int* device_output) {
 
 }
 
+__global__ void
+switchlast_first(int nextPow2N, int* device_input) {    
+    device_input[0] = device_input[nextPow2 - 1];
+}
 
 // find_repeats --
 //
@@ -334,8 +338,8 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // the actual array length.
 
     int nextPow2var = nextPow2(length);
-    int *resultarray, *device_resultarray, number_pairs;
     const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    int *resultarray;
 
     // Testing
     /* int* resultt = (int*)malloc(nextPow2var*sizeof(int));
@@ -385,7 +389,14 @@ int find_repeats(int* device_input, int length, int* device_output) {
 
     //cudaFree(device_resultarray);
     //free(resultarray);
-    return number_pairs; 
+
+    resultarray = (int*)malloc(1*sizeof(int));
+    if (resultarray == NULL) {
+        return -1;
+    }
+    switchlast_first<<<1, 1>>>(nextPow2var, device_input);
+    cudaMemcpy(resultarray, device_input, nextPow2var* sizeof(int), cudaMemcpyDeviceToHost);
+    return resultarray[0]; 
 }
 
 
