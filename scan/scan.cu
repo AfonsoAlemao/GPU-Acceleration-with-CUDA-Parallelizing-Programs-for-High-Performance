@@ -304,7 +304,7 @@ getFindRepeats(int N, int nextPow2N, int* resultarray, int* device_output) {
     int auxiliar = 0;
 
     if (index < N - 1) {
-        auxiliar = result_array[index];
+        auxiliar = resultarray[index];
         if (auxiliar != resultarray[index + 1]) {
             device_output[auxiliar] = index;
         }
