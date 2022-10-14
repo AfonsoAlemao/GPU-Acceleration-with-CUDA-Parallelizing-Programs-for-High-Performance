@@ -308,10 +308,23 @@ getFindRepeats(int N, int* resultarray, int* device_output) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int auxiliar = 0;
 
+    __shared__ int support[THREADS_PER_BLOCK];
+    
+    support[threadIdx.x] = resultarray[index];
+    __syncthreads();
+
     if (index < N - 1) {
-        auxiliar = resultarray[index];
-        if (auxiliar != resultarray[index + 1]) {
-            device_output[auxiliar] = index;
+        if (threadIdx.x < THREADS_PER_BLOCK - 1) {
+            auxiliar = support[threadIdx.x];
+            if (auxiliar != support[threadIdx.x + 1]) {
+                device_output[auxiliar] = index;
+            }
+        }
+        else {
+            auxiliar = resultarray[index];
+            if (auxiliar != resultarray[index + 1]) {
+                device_output[auxiliar] = index;
+            }
         }
     }
 
