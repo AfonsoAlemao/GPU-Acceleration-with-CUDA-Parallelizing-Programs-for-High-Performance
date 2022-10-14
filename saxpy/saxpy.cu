@@ -117,7 +117,7 @@ void saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultar
     // printf("Effective BW by CUDA saxpy: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration, GBPerSec(totalBytes, overallDuration));
 
     double overallDuration2 = endTime2 - startTime2;
-    printf("Effective BW by CUDA saxpy: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration2, GBPerSec(totalBytes, overallDuration2));
+    printf("Time taken to run the kernel: %.3f ms\t\t[%.3f GB/s]\n", 1000.f * overallDuration2, GBPerSec(totalBytes, overallDuration2));
 
     //
     // STUDENTS TODO: free memory buffers on the GPU using cudaFree
