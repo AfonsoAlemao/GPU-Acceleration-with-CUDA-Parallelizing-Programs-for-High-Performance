@@ -94,7 +94,7 @@ void saxpyCuda(int N, float alpha, float* xarray, float* yarray, float* resultar
     // run CUDA kernel. (notice the <<< >>> brackets indicating a CUDA
     // kernel launch) Execution on the GPU occurs here.
     saxpy_kernel<<<blocks, threadsPerBlock>>>(N, alpha, device_x, device_y, device_result);
-    cudaDeviceSynchronize();
+    cudaCheckError(cudaDeviceSynchronize()); // error is printed on this line
     double endTime2 = CycleTimer::currentSeconds(); 
 
     //
@@ -149,3 +149,17 @@ void printCudaInfo() {
     }
     printf("---------------------------------------------------------\n");
 }
+
+#define DEBUG
+#ifdef DEBUG
+#define cudaCheckError(ans) { cudaAssert((ans), __FILE__, __LINE__); }
+inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+if (code != cudaSuccess) {
+fprintf(stderr, "CUDA Error: %s at %s:%d\n", cudaGetErrorString(code), file, line);
+if (abort) exit(code);
+}
+}
+#else
+#define cudaCheckError(ans) ans
+#endif
