@@ -121,8 +121,8 @@ void exclusive_scan(int* input, int N, int* result)
     // to CUDA kernel functions (that you must write) to implement the
     // scan.
     
-    const int blocks = (nextPow2(N) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     int nextPow2var = nextPow2(N);
+    const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
     initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N, nextPow2var);
 
@@ -346,7 +346,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     // the actual array length.
 
     const int blocks = (length + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-    int *resultarray;
+    int resultarray;
 
     // Testing
     /* int* resultt = (int*)malloc(nextPow2var*sizeof(int));
@@ -384,13 +384,9 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */ 
 
-    resultarray = (int*)malloc(1*sizeof(int));
-    if (resultarray == NULL) {
-        return -1;
-    }
     switchlast_first<<<1, 1>>>(length, device_input);
-    cudaMemcpy(resultarray, device_input, 1* sizeof(int), cudaMemcpyDeviceToHost);
-    return resultarray[0]; 
+    cudaMemcpy(&resultarray, device_input, sizeof(int), cudaMemcpyDeviceToHost);
+    return resultarray; 
 }
 
 
