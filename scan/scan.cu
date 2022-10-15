@@ -125,7 +125,8 @@ void exclusive_scan(int* input, int N, int* result)
     const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
     initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N, nextPow2var);
-
+    cudaCheckError(cudaDeviceSynchronize());
+    
     // Testing
     /* int* resultt = (int*)malloc(N*sizeof(int));
     cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
@@ -144,7 +145,7 @@ void exclusive_scan(int* input, int N, int* result)
             threads_per_block = (nextPow2var/twod1);
         }
         upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, nextPow2var);
-
+        cudaCheckError(cudaDeviceSynchronize());
 
         // Testing
         /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
@@ -156,7 +157,7 @@ void exclusive_scan(int* input, int N, int* result)
     }
 
     putZeroInEnd<<<1, 1>>>(result, nextPow2var);
-
+    cudaCheckError(cudaDeviceSynchronize());
      // Testing
     /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
     printf("End\n");
@@ -174,6 +175,7 @@ void exclusive_scan(int* input, int N, int* result)
             threads_per_block = (nextPow2var/twod1);
         }
         downsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, nextPow2var);
+        cudaCheckError(cudaDeviceSynchronize());
     }
 
     // Testing
@@ -358,7 +360,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     printf("\n"); */
 
     isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, device_output, device_input);
-    
+    cudaCheckError(cudaDeviceSynchronize());
     // Testing
     /* cudaMemcpy(resultt, device_output, nextPow2var * sizeof(int), cudaMemcpyDeviceToHost);
     printf("IsEqualToNext\n");
@@ -375,7 +377,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     printf("\n"); */
 
     getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, device_input, device_output);
-
+    cudaCheckError(cudaDeviceSynchronize());
      // Testing
     /* cudaMemcpy(resultt, device_output, number_pairs * sizeof(int), cudaMemcpyDeviceToHost);
     printf("Device output\n");
@@ -385,6 +387,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     printf("\n"); */ 
 
     switchlast_first<<<1, 1>>>(length, device_input);
+    cudaCheckError(cudaDeviceSynchronize());
     cudaMemcpy(&resultarray, device_input, sizeof(int), cudaMemcpyDeviceToHost);
     return resultarray; 
 }
@@ -445,3 +448,17 @@ void printCudaInfo()
     }
     printf("---------------------------------------------------------\n"); 
 }
+
+#define DEBUG
+#ifdef DEBUG
+#define cudaCheckError(ans) { cudaAssert((ans), __FILE__, __LINE__); }
+inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+if (code != cudaSuccess) {
+fprintf(stderr, "CUDA Error: %s at %s:%d\n", cudaGetErrorString(code), file, line);
+if (abort) exit(code);
+}
+}
+#else
+#define cudaCheckError(ans) ans
+#endif
