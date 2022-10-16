@@ -73,12 +73,12 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
     if (index < nextPow2var/twod1){
         index *= twod1;
         if (index + twod1 - 1 < nextPow2var) {
-            int tmp = result[index + twod - 1];
             int aux = result[index + twod1 - 1];
-            result[index + twod - 1] = aux;
             if (index + twod - 1 < N) {
+                int tmp = result[index + twod - 1];
                 result[index + twod1 - 1] = tmp + aux;
             }
+            result[index + twod - 1] = aux;
         }
     }
 }
