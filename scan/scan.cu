@@ -44,14 +44,14 @@ static inline int nextPow2(int n) {
 // This is the CUDA "kernel" function that is run on the GPU.  You
 // know this because it is marked as a __global__ function.
 __global__ void
-upsweepPhaseKernel(int twod1, int twod, int* result, int N) {
+upsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
 
     // compute overall thread index from position of thread in current
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index < N / twod1) {
+    if (index < nextPow2var / twod1) {
         index *= twod1;
         if (index + twod1 - 1 < N) {
             result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
@@ -159,7 +159,7 @@ void exclusive_scan(int* input, int N, int* result)
         if (num_block_iter == 1) {
             threads_per_block = (nextPow2var/twod1);
         }
-        upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, nextPow2var);
+        upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, N, nextPow2var);
         cudaCheckError(cudaDeviceSynchronize());
 
         // Testing
