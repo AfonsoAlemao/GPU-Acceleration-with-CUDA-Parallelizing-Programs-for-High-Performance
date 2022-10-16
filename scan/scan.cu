@@ -72,13 +72,13 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
     int index = (blockIdx.x * blockDim.x + threadIdx.x);
     if (index < nextPow2var/twod1){
         index *= twod1;
-        if (index + twod - 1 < nextPow2var) {
+        if (index + twod1 - 1 < nextPow2var) {
             int tmp = result[index + twod - 1];
             int aux = result[index + twod1 - 1];
-            //if (index + twod1 - 1 < N) {
-                result[index + twod - 1] = aux;
-            //}
-            result[index + twod1 - 1] = tmp + aux;
+            result[index + twod - 1] = aux;
+            if (index + twod - 1 < N) {
+                result[index + twod1 - 1] = tmp + aux;
+            }
         }
     }
 }
