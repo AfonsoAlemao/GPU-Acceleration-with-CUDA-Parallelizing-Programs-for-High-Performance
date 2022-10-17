@@ -108,9 +108,9 @@ initializeResultKernel(int* input, int* result, int N, int nextPow2N) {
     if (index < N) {
         result[index] = input[index];
     }
-    else if (index < nextPow2N) {
+    /*else if (index < nextPow2N) {
         result[index] = 0;
-    }
+    }*/
 }
 
 __global__ void
@@ -189,12 +189,12 @@ void exclusive_scan(int* input, int N, int* result)
     double overallDuration2 = endTime2 - startTime2;
     printf("Time upsweep: %.3f ms\n", 1000.f * overallDuration2);
     
-    double startTime3 = CycleTimer::currentSeconds();
+    // double startTime3 = CycleTimer::currentSeconds();
     putZeroInEnd<<<1, 1>>>(result, nextPow2var);
     cudaCheckError(cudaDeviceSynchronize());
-    double endTime3 = CycleTimer::currentSeconds(); 
-    double overallDuration3 = endTime3 - startTime3;
-    printf("Time putZeroInEnd: %.3f ms\n", 1000.f * overallDuration3);
+    // double endTime3 = CycleTimer::currentSeconds(); 
+    // double overallDuration3 = endTime3 - startTime3;
+    // printf("Time putZeroInEnd: %.3f ms\n", 1000.f * overallDuration3);
     
      // Testing
     /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
