@@ -6,8 +6,8 @@
 
 #objets
 ####################
-# saxpy/objs/
-# scan/objs/
+saxpy/objs/
+scan/objs/
 #Makefiles
 ####################
 saxpy/Makefile
