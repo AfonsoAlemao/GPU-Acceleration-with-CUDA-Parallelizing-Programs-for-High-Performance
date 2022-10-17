@@ -51,12 +51,12 @@ upsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index < nextPow2var / twod1) {
+    // if (index < nextPow2var / twod1) {
         index *= twod1;
         if (index + twod1 - 1 < N) {
             result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
         }
-    }
+    // }
 
 }
 
@@ -70,7 +70,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index < nextPow2var / twod1) {
+    // if (index < nextPow2var / twod1) {
         index *= twod1;
         if (index + twod1 - 1 < nextPow2var) {
             if (index + twod - 1 < N) {
@@ -90,7 +90,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
                 }
             }
         }
-    }
+    // }
 }
 
 
