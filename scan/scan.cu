@@ -167,10 +167,10 @@ void exclusive_scan(int* input, int N, int* result)
     // double startTime2 = CycleTimer::currentSeconds();
     for (int twod = 1; twod < nextPow2var / 2; twod *= 2) {
         int twod1 = twod*2;
-        int num_block_iter = ((nextPow2var/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+        int num_block_iter = ((N/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
         int threads_per_block = THREADS_PER_BLOCK;
         if (num_block_iter == 1) {
-            threads_per_block = (nextPow2var/twod1);
+            threads_per_block = (N/twod1);
         }
         upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, N, nextPow2var);
         cudaCheckError(cudaDeviceSynchronize());
