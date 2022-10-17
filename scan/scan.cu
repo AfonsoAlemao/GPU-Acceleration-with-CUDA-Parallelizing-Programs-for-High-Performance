@@ -53,7 +53,7 @@ upsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     // if (index < nextPow2var / twod1) {
     index *= twod1;
-    if (index + twod1 - 1 < N) {
+    if (index + twod1 - 1 < N - 1) {
         result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
     }
     // }
