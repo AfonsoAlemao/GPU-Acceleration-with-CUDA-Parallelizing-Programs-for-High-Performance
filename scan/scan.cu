@@ -394,7 +394,8 @@ int find_repeats(int* device_input, int length, int* device_output) {
     }
     printf("\n"); */ 
 
-    cudaScan(device_output, device_output + length, device_input);
+    exclusive_scan(device_output, length, device_input);
+    // cudaScan(device_output, device_output + length, device_input);
 
     /* for (int i = 0; i < nextPow2var; i++){
         printf("Ressultarray: %d\n", resultarray[i]);
