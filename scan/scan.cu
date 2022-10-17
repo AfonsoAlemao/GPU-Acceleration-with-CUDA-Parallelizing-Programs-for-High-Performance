@@ -51,12 +51,12 @@ upsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    // if (index < nextPow2var / twod1) {
-    index *= twod1;
-    if (index + twod1 - 1 < N) {
-        result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
+    if (index < nextPow2var / twod1) {
+        index *= twod1;
+        if (index + twod1 - 1 < N) {
+            result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
+        }
     }
-    // }
 
 }
 
@@ -70,25 +70,26 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-    // if (index < nextPow2var / twod1) {
-    index *= twod1;
-    if (index + twod1 - 1 < nextPow2var) {
-        if (index + twod - 1 < N) {
-            int aux = result[index + twod1 - 1];
-            result[index + twod1 - 1] = result[index + twod - 1] + aux;
-            result[index + twod - 1] = aux;
-        }
-        else {
-            float counter = 0;
-            for (float i = twod; i >= 1; i /= 2) {
-                counter += i;
+    
+    if (index < nextPow2var / twod1) {
+        index *= twod1;
+        if (index + twod1 - 1 < nextPow2var) {
+            if (index + twod - 1 < N) {
+                int aux = result[index + twod1 - 1];
+                result[index + twod1 - 1] = result[index + twod - 1] + aux;
+                result[index + twod - 1] = aux;
             }
-            if (index + twod1 - 1 - (int)counter < N) {
-                result[index + twod - 1] = result[index + twod1 - 1];
+            else {
+                float counter = 0;
+                for (float i = twod; i >= 1; i /= 2) {
+                    counter += i;
+                }
+                if (index + twod1 - 1 - (int)counter < N) {
+                    result[index + twod - 1] = result[index + twod1 - 1];
+                }
             }
         }
     }
-    // }
 }
 
 
@@ -168,11 +169,11 @@ void exclusive_scan(int* input, int N, int* result)
     for (int twod = 1; twod < nextPow2var / 2; twod *= 2) {
         int twod1 = twod*2;
         int num_block_iter = ((nextPow2var/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-        int threads_per_block = THREADS_PER_BLOCK;
-        if (num_block_iter == 1) {
-            threads_per_block = (nextPow2var/twod1);
-        }
-        upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, N, nextPow2var);
+        //int threads_per_block = THREADS_PER_BLOCK;
+        //if (num_block_iter == 1) {
+        //    threads_per_block = (nextPow2var/twod1);
+        //}
+        upsweepPhaseKernel<<<num_block_iter, THREADS_PER_BLOCK>>>(twod1, twod, result, N, nextPow2var);
         cudaCheckError(cudaDeviceSynchronize());
 
         // Testing
@@ -207,11 +208,11 @@ void exclusive_scan(int* input, int N, int* result)
     for (int twod = nextPow2var / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
         int num_block_iter = ((nextPow2var/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-        int threads_per_block = THREADS_PER_BLOCK;
-        if (num_block_iter == 1) {
-            threads_per_block = (nextPow2var/twod1);
-        }
-        downsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, N, nextPow2var);
+        //int threads_per_block = THREADS_PER_BLOCK;
+        //if (num_block_iter == 1) {
+        //    threads_per_block = (nextPow2var/twod1);
+        //}
+        downsweepPhaseKernel<<<num_block_iter, THREADS_PER_BLOCK>>>(twod1, twod, result, N, nextPow2var);
         cudaCheckError(cudaDeviceSynchronize());
     }
     // double endTime4 = CycleTimer::currentSeconds(); 
