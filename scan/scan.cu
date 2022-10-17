@@ -149,8 +149,12 @@ void exclusive_scan(int* input, int N, int* result)
     int nextPow2var = nextPow2(N);
     const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
+    double startTime = CycleTimer::currentSeconds();
     initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N, nextPow2var);
     cudaCheckError(cudaDeviceSynchronize());
+    double endTime = CycleTimer::currentSeconds(); 
+    double overallDuration = endTime - startTime;
+    printf("Time initializeResultKernel: %.3f ms\n", 1000.f * overallDuration);
     
     // Testing
     /* int* resultt = (int*)malloc(N*sizeof(int));
@@ -162,6 +166,7 @@ void exclusive_scan(int* input, int N, int* result)
     printf("\n"); */
 
     // upsweep phase
+    double startTime2 = CycleTimer::currentSeconds();
     for (int twod = 1; twod < nextPow2var / 2; twod *= 2) {
         int twod1 = twod*2;
         int num_block_iter = ((nextPow2var/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
@@ -180,9 +185,17 @@ void exclusive_scan(int* input, int N, int* result)
         }
         printf("\n"); */
     }
+    double endTime2 = CycleTimer::currentSeconds(); 
+    double overallDuration2 = endTime2 - startTime2;
+    printf("Time upsweep: %.3f ms\n", 1000.f * overallDuration2);
     
+    double startTime3 = CycleTimer::currentSeconds();
     putZeroInEnd<<<1, 1>>>(result, nextPow2var);
     cudaCheckError(cudaDeviceSynchronize());
+    double endTime3 = CycleTimer::currentSeconds(); 
+    double overallDuration3 = endTime3 - startTime3;
+    printf("Time putZeroInEnd: %.3f ms\n", 1000.f * overallDuration3);
+    
      // Testing
     /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
     printf("End\n");
@@ -192,6 +205,7 @@ void exclusive_scan(int* input, int N, int* result)
     printf("\n");*/
 
     // downsweep phase
+    double startTime4 = CycleTimer::currentSeconds();
     for (int twod = nextPow2var / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
         int num_block_iter = ((nextPow2var/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
@@ -202,6 +216,9 @@ void exclusive_scan(int* input, int N, int* result)
         downsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, N, nextPow2var);
         cudaCheckError(cudaDeviceSynchronize());
     }
+    double endTime4 = CycleTimer::currentSeconds(); 
+    double overallDuration4 = endTime4 - startTime4;
+    printf("Time downsweep: %.3f ms\n", 1000.f * overallDuration4);
 
     // Testing
     /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
@@ -212,7 +229,6 @@ void exclusive_scan(int* input, int N, int* result)
     printf("\n"); */
 
 }
-
 
 //
 // cudaScan --
