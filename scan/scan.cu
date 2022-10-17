@@ -52,10 +52,10 @@ upsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
     // blockDim and threadIdx.
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     // if (index < nextPow2var / twod1) {
-        index *= twod1;
-        if (index + twod1 - 1 < N) {
-            result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
-        }
+    index *= twod1;
+    if (index + twod1 - 1 < N) {
+        result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
+    }
     // }
 
 }
@@ -71,25 +71,23 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
     // blockDim and threadIdx.
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     // if (index < nextPow2var / twod1) {
-        index *= twod1;
-        if (index + twod1 - 1 < nextPow2var) {
-            if (index + twod - 1 < N) {
-                int tmp = result[index + twod - 1];
-                int aux = result[index + twod1 - 1];
-                result[index + twod1 - 1] = tmp + aux;
-                result[index + twod - 1] = aux;
+    index *= twod1;
+    if (index + twod1 - 1 < nextPow2var) {
+        if (index + twod - 1 < N) {
+            int aux = result[index + twod1 - 1];
+            result[index + twod1 - 1] = result[index + twod - 1] + aux;
+            result[index + twod - 1] = aux;
+        }
+        else {
+            float counter = 0;
+            for (float i = twod; i >= 1; i /= 2) {
+                counter += i;
             }
-            else {
-                float counter = 0;
-                for (float i = twod; i >= 1; i /= 2) {
-                    counter += i;
-                }
-                if (index + twod1 - 1 - (int)counter < N) {
-                    int aux = result[index + twod1 - 1];
-                    result[index + twod - 1] = aux;
-                }
+            if (index + twod1 - 1 - (int)counter < N) {
+                result[index + twod - 1] = result[index + twod1 - 1];
             }
         }
+    }
     // }
 }
 
@@ -411,7 +409,6 @@ int find_repeats(int* device_input, int length, int* device_output) {
     printf("\n"); */ 
 
     exclusive_scan(device_output, length, device_input);
-    // cudaScan(device_output, device_output + length, device_input);
 
     /* for (int i = 0; i < nextPow2var; i++){
         printf("Ressultarray: %d\n", resultarray[i]);
