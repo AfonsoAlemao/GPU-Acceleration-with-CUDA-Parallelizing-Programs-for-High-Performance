@@ -143,7 +143,7 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
     
     int nextPow2var = nextPow2(N);
-    const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    // const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
     // double startTime = CycleTimer::currentSeconds();
     initializeResultKernel<<<(N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(input, result);
