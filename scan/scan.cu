@@ -44,15 +44,14 @@ static inline int nextPow2(int n) {
 // This is the CUDA "kernel" function that is run on the GPU.  You
 // know this because it is marked as a __global__ function.
 __global__ void
-upsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
+upsweepPhaseKernel(int twod1, int twod, int* result) {
 
     // compute overall thread index from position of thread in current
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
     // if (index < nextPow2var / twod1) {
-    index *= twod1;
     //if (index + twod1 - 1 < N - 1) {
     result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
     //}
@@ -63,30 +62,29 @@ upsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
 // This is the CUDA "kernel" function that is run on the GPU.  You
 // know this because it is marked as a __global__ function.
 __global__ void
-downsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
+downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
 
     // compute overall thread index from position of thread in current
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
-    int index = (blockIdx.x * blockDim.x + threadIdx.x)*twod1;
+    int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
     // if (index < nextPow2var / twod1) {
-    //index *= twod1;
     //if (index + twod1 - 1 < nextPow2var) {
-        if (index + twod - 1 < N) {
-            int aux = result[index + twod1 - 1];
-            result[index + twod1 - 1] = result[index + twod - 1] + aux;
-            result[index + twod - 1] = aux;
+    if (index + twod - 1 < N) {
+        int aux = result[index + twod1 - 1];
+        result[index + twod1 - 1] = result[index + twod - 1] + aux;
+        result[index + twod - 1] = aux;
+    }
+    else {
+        float counter = 0;
+        for (float i = twod; i >= 1; i /= 2) {
+            counter += i;
         }
-        else {
-            float counter = 0;
-            for (float i = twod; i >= 1; i /= 2) {
-                counter += i;
-            }
-            if (index + twod1 - 1 - (int)counter < N) {
-                result[index + twod - 1] = result[index + twod1 - 1];
-            }
+        if (index + twod1 - 1 - (int)counter < N) {
+            result[index + twod - 1] = result[index + twod1 - 1];
         }
+    }
     //}
     // }
 }
@@ -95,7 +93,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N, int nextPow2var) {
 // This is the CUDA "kernel" function that is run on the GPU.  You
 // know this because it is marked as a __global__ function.
 __global__ void
-initializeResultKernel(int* input, int* result, int N) {
+initializeResultKernel(int* input, int* result) {
 
     // compute overall thread index from position of thread in current
     // block, and given the block we are in (in this example only a 1D
@@ -103,9 +101,9 @@ initializeResultKernel(int* input, int* result, int N) {
     // blockDim and threadIdx.
     int index = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (index < N) {
-        result[index] = input[index];
-    }
+    //if (index < N) {
+    result[index] = input[index];
+    //}
     /*else if (index < nextPow2N) {
         result[index] = 0;
     }*/
@@ -148,7 +146,7 @@ void exclusive_scan(int* input, int N, int* result)
     const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
     // double startTime = CycleTimer::currentSeconds();
-    initializeResultKernel<<<blocks, THREADS_PER_BLOCK>>>(input, result, N);
+    initializeResultKernel<<<(N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(input, result);
     cudaCheckError(cudaDeviceSynchronize());
     // double endTime = CycleTimer::currentSeconds(); 
     // double overallDuration = endTime - startTime;
@@ -172,7 +170,7 @@ void exclusive_scan(int* input, int N, int* result)
         if (num_block_iter == 1) {
             threads_per_block = (N/twod1);
         }
-        upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, N, nextPow2var);
+        upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result);
         cudaCheckError(cudaDeviceSynchronize());
 
         // Testing
@@ -211,7 +209,7 @@ void exclusive_scan(int* input, int N, int* result)
         if (num_block_iter == 1) {
             threads_per_block = (nextPow2var/twod1);
         }
-        downsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, N, nextPow2var);
+        downsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, N);
         cudaCheckError(cudaDeviceSynchronize());
     }
     // double endTime4 = CycleTimer::currentSeconds(); 
