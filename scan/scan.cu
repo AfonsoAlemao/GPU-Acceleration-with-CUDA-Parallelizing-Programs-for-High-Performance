@@ -51,11 +51,9 @@ upsweepPhaseKernel(int twod1, int twod, int* result) {
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
     int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
-    // if (index < nextPow2var / twod1) {
-    //if (index + twod1 - 1 < N - 1) {
+    // if (index + twod1 - 1 < N - 1) {
     result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
     //}
-    // }
 
 }
 
@@ -69,8 +67,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
     int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
-    // if (index < nextPow2var / twod1) {
-    //if (index + twod1 - 1 < nextPow2var) {
+    // if (index + twod1 - 1 < nextPow2var) {
     if (index + twod - 1 < N) {
         int aux = result[index + twod1 - 1];
         result[index + twod1 - 1] = result[index + twod - 1] + aux;
@@ -86,7 +83,6 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
         }
     }
     //}
-    // }
 }
 
 
@@ -143,7 +139,6 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
     
     int nextPow2var = nextPow2(N);
-    // const int blocks = (nextPow2var + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
     // double startTime = CycleTimer::currentSeconds();
     initializeResultKernel<<<(N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(input, result, N);
@@ -223,7 +218,6 @@ void exclusive_scan(int* input, int N, int* result)
         printf("A[%d]=%d\n", i, resultt[i]);
     }
     printf("\n"); */
-
 }
 
 //
