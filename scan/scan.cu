@@ -101,9 +101,9 @@ initializeResultKernel(int* input, int* result) {
     // blockDim and threadIdx.
     int index = blockIdx.x * blockDim.x + threadIdx.x;
 
-    //if (index < N) {
-    result[index] = input[index];
-    //}
+    if (index < N) {
+        result[index] = input[index];
+    }
     /*else if (index < nextPow2N) {
         result[index] = 0;
     }*/
