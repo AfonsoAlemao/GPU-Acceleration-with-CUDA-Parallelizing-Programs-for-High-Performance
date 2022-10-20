@@ -381,41 +381,13 @@ int find_repeats(int* device_input, int length, int* device_output) {
     const int blocks = (length + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     int resultarray;
 
-    // Testing
-    /* int* resultt = (int*)malloc(nextPow2var*sizeof(int));
-    cudaMemcpy(resultt, device_input, nextPow2var * sizeof(int), cudaMemcpyDeviceToHost);
-    printf("Initialy\n");
-    for (int i = 0; i < nextPow2var; i++) {
-        printf("A[%d]=%d\n", i, resultt[i]);
-    }
-    printf("\n"); */
-
     isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, device_output, device_input);
     cudaCheckError(cudaDeviceSynchronize());
-    // Testing
-    /* cudaMemcpy(resultt, device_output, nextPow2var * sizeof(int), cudaMemcpyDeviceToHost);
-    printf("IsEqualToNext\n");
-    for (int i = 0; i < nextPow2var; i++) {
-        printf("A[%d]=%d\n", i, resultt[i]);
-    }
-    printf("\n"); */ 
 
     exclusive_scan(device_output, length, device_input);
 
-    /* for (int i = 0; i < nextPow2var; i++){
-        printf("Ressultarray: %d\n", resultarray[i]);
-    }
-    printf("\n"); */
-
     getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, device_input, device_output);
     cudaCheckError(cudaDeviceSynchronize());
-     // Testing
-    /* cudaMemcpy(resultt, device_output, number_pairs * sizeof(int), cudaMemcpyDeviceToHost);
-    printf("Device output\n");
-    for (int i = 0; i < resultarray[nextPow2var - 1]; i++) {
-        printf("A[%d]=%d\n", i, resultt[i]);
-    }
-    printf("\n"); */ 
 
     switchlast_first<<<1, 1>>>(length, device_input);
     cudaCheckError(cudaDeviceSynchronize());
