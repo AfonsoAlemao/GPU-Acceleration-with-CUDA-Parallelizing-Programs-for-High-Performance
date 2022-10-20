@@ -142,8 +142,8 @@ void exclusive_scan(int* input, int N, int* result)
     
     int nextPow2var = nextPow2(N);
 
-    //initializeResultKernel<<<(N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(input, result, N);
-    //cudaCheckError(cudaDeviceSynchronize());
+    initializeResultKernel<<<(N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(input, result, N);
+    cudaCheckError(cudaDeviceSynchronize());
 
     // upsweep phase
     for (int twod = 1; twod < nextPow2var / 2; twod *= 2) {
