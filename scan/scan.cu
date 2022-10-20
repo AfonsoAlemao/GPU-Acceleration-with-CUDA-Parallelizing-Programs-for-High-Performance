@@ -312,6 +312,7 @@ isEqualToNext(int N, int* aux, int* input) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     __shared__ int support[THREADS_PER_BLOCK + 1];
     
+    //get all relevant information loaded in a shared array
     support[threadIdx.x] = input[index];
     if (threadIdx.x < 1) {
         support[THREADS_PER_BLOCK + threadIdx.x] = input[index + THREADS_PER_BLOCK];
@@ -319,6 +320,7 @@ isEqualToNext(int N, int* aux, int* input) {
 
     __syncthreads();
 
+    //check if element in this index has the same value of the element ahed of it and place in the new array '1' or '0'
     if (index < N - 1) {
         if (support[threadIdx.x] == support[threadIdx.x + 1]) {
             aux[index] = 1;
@@ -336,6 +338,7 @@ getFindRepeats(int N, int* resultarray, int* device_output) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int auxiliar = 0;
 
+    //get all relevant information loaded in a shared array
     __shared__ int support[THREADS_PER_BLOCK + 1];
     
     support[threadIdx.x] = resultarray[index];
@@ -344,6 +347,8 @@ getFindRepeats(int N, int* resultarray, int* device_output) {
     }
     __syncthreads();
 
+    //check if element has a different value has the one ahead of it , if so save to the output the index. 
+    //The index in the output where it will be saved is the value of the initial element
     if (index < N - 1) {
         auxiliar = support[threadIdx.x];
         if (auxiliar != support[threadIdx.x + 1]) {
