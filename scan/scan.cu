@@ -52,7 +52,7 @@ upsweepPhaseKernel(int N,int twod1, int twod, int* result) {
     // blockDim and threadIdx.
     int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
     
-    // Check if we're inside array of size N (not nextpow(2N)) any other operation is a waste of time 
+    // Check if we're inside array of size N (not nextpow2(N)). Any other operation is a waste of time 
     if (index + twod1 - 1 < N - 1) {
         result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
     }
@@ -72,7 +72,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
 
     // Check if it's worth to right swap
-    // It's always worth to left swap if we right swap
+    // If right swap is mandatory, left swap is also mandatory
     if (index + twod - 1 < N) {
         int aux = result[index + twod1 - 1];
         result[index + twod1 - 1] = result[index + twod - 1] + aux;
@@ -80,7 +80,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     }
     else {
         float counter = 0;
-        //check if it's worth it to copy to the left be checking if all swaps end up inside the actual array of size N
+        // Check if it's worth it to left swap by checking if the final propagation index is in range N
         for (float i = twod; i >= 1; i /= 2) {
             counter += i;
         }
@@ -89,9 +89,6 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
         }
     }
 }
-
-
-
 
 __global__ void
 putZeroInEnd(int* result, int N) {
@@ -138,7 +135,6 @@ void exclusive_scan(int* input, int N, int* result)
         }
         upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(N, twod1, twod, result);
         cudaCheckError(cudaDeviceSynchronize());
-
     }
 
     putZeroInEnd<<<1, 1>>>(result, nextPow2var);
@@ -249,7 +245,7 @@ isEqualToNext(int N, int* aux, int* input) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     __shared__ int support[THREADS_PER_BLOCK + 1];
     
-    //get all relevant information loaded in a shared array
+    // Get all relevant information loaded in a shared array
     support[threadIdx.x] = input[index];
     if (threadIdx.x < 1) {
         support[THREADS_PER_BLOCK + threadIdx.x] = input[index + THREADS_PER_BLOCK];
@@ -257,7 +253,7 @@ isEqualToNext(int N, int* aux, int* input) {
 
     __syncthreads();
 
-    //check if element in this index has the same value of the element ahed of it and place in the new array '1' or '0'
+    // Check if element in this index has the same value of the element ahead of it
     if (index < N - 1) {
         if (support[threadIdx.x] == support[threadIdx.x + 1]) {
             aux[index] = 1;
@@ -275,7 +271,7 @@ getFindRepeats(int N, int* resultarray, int* device_output) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int auxiliar = 0;
 
-    //get all relevant information loaded in a shared array
+    // Get all relevant information loaded in a shared array
     __shared__ int support[THREADS_PER_BLOCK + 1];
     
     support[threadIdx.x] = resultarray[index];
@@ -284,8 +280,8 @@ getFindRepeats(int N, int* resultarray, int* device_output) {
     }
     __syncthreads();
 
-    //check if element has a different value has the one ahead of it , if so save to the output the index. 
-    //The index in the output where it will be saved is the value of the initial element
+    // Check if element has a different value of the one ahead of it, if so save to the output the index of the element. 
+    // The output's index where it will be saved is the value of the element
     if (index < N - 1) {
         auxiliar = support[threadIdx.x];
         if (auxiliar != support[threadIdx.x + 1]) {
