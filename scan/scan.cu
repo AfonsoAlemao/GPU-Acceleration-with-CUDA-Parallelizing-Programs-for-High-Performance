@@ -91,21 +91,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
 }
 
 
-// This is the CUDA "kernel" function that is run on the GPU.  You
-// know this because it is marked as a __global__ function.
-__global__ void
-initializeResultKernel(int* input, int* result, int N) {
 
-    // compute overall thread index from position of thread in current
-    // block, and given the block we are in (in this example only a 1D
-    // calculation is needed so the code only looks at the .x terms of
-    // blockDim and threadIdx.
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (index < N) {
-        result[index] = input[index];
-    }
-}
 
 __global__ void
 putZeroInEnd(int* result, int N) {
@@ -141,9 +127,6 @@ void exclusive_scan(int* input, int N, int* result)
     // scan.
     
     int nextPow2var = nextPow2(N);
-
-    // initializeResultKernel<<<(N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(input, result, N);
-    // cudaCheckError(cudaDeviceSynchronize());
 
     // upsweep phase
     for (int twod = 1; twod < nextPow2var / 2; twod *= 2) {
@@ -317,6 +300,22 @@ switchlast_first(int length, int* device_input) {
     device_input[0] = device_input[length - 1];
 }
 
+// This is the CUDA "kernel" function that is run on the GPU.  You
+// know this because it is marked as a __global__ function.
+__global__ void
+copyKernel(int* input, int* result, int N) {
+
+    // compute overall thread index from position of thread in current
+    // block, and given the block we are in (in this example only a 1D
+    // calculation is needed so the code only looks at the .x terms of
+    // blockDim and threadIdx.
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (index < N) {
+        result[index] = input[index];
+    }
+}
+
 // find_repeats --
 //
 // Given an array of integers `device_input`, returns an array of all
@@ -343,7 +342,10 @@ int find_repeats(int* device_input, int length, int* device_output) {
     isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, device_output, device_input);
     cudaCheckError(cudaDeviceSynchronize());
 
-    exclusive_scan(device_output, length, device_output);
+    copyKernel<<<(N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(device_output, device_input, N);
+    cudaCheckError(cudaDeviceSynchronize());
+
+    exclusive_scan(device_output, length, device_input);
 
     getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, device_input, device_output);
     cudaCheckError(cudaDeviceSynchronize());
