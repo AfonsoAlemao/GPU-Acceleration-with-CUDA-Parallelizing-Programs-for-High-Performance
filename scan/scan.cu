@@ -343,7 +343,7 @@ int find_repeats(int* device_input, int length, int* device_output) {
     isEqualToNext<<<blocks, THREADS_PER_BLOCK>>>(length, device_output, device_input);
     cudaCheckError(cudaDeviceSynchronize());
 
-    exclusive_scan(device_output, length, device_input);
+    exclusive_scan(device_output, length, device_output);
 
     getFindRepeats<<<blocks, THREADS_PER_BLOCK>>>(length, device_input, device_output);
     cudaCheckError(cudaDeviceSynchronize());
