@@ -44,16 +44,18 @@ static inline int nextPow2(int n) {
 // This is the CUDA "kernel" function that is run on the GPU.  You
 // know this because it is marked as a __global__ function.
 __global__ void
-upsweepPhaseKernel(int twod1, int twod, int* result) {
+upsweepPhaseKernel(int N,int twod1, int twod, int* result) {
 
     // compute overall thread index from position of thread in current
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
     int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
-    // if (index + twod1 - 1 < N - 1) {
-    result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
-    //}
+    
+    // Check if we're inside array of size N (not nextpow(2N)) any other operation is a waste of time 
+    if (index + twod1 - 1 < N - 1) {
+        result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
+    }
 
 }
 
@@ -66,8 +68,11 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     // block, and given the block we are in (in this example only a 1D
     // calculation is needed so the code only looks at the .x terms of
     // blockDim and threadIdx.
+
     int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
-    // if (index + twod1 - 1 < nextPow2var) {
+
+    // Check if it's worth to right swap
+    // It's always worth to left swap if we right swap
     if (index + twod - 1 < N) {
         int aux = result[index + twod1 - 1];
         result[index + twod1 - 1] = result[index + twod - 1] + aux;
@@ -75,6 +80,7 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
     }
     else {
         float counter = 0;
+        //check if it's worth it to copy to the left be checking if all swaps end up inside the actual array of size N
         for (float i = twod; i >= 1; i /= 2) {
             counter += i;
         }
@@ -82,7 +88,6 @@ downsweepPhaseKernel(int twod1, int twod, int* result, int N) {
             result[index + twod - 1] = result[index + twod1 - 1];
         }
     }
-    //}
 }
 
 
@@ -100,9 +105,6 @@ initializeResultKernel(int* input, int* result, int N) {
     if (index < N) {
         result[index] = input[index];
     }
-    /*else if (index < nextPow2N) {
-        result[index] = 0;
-    }*/
 }
 
 __global__ void
@@ -140,24 +142,10 @@ void exclusive_scan(int* input, int N, int* result)
     
     int nextPow2var = nextPow2(N);
 
-    // double startTime = CycleTimer::currentSeconds();
-    initializeResultKernel<<<(N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(input, result, N);
-    cudaCheckError(cudaDeviceSynchronize());
-    // double endTime = CycleTimer::currentSeconds(); 
-    // double overallDuration = endTime - startTime;
-    // printf("Time initializeResultKernel: %.3f ms\n", 1000.f * overallDuration);
-    
-    // Testing
-    /* int* resultt = (int*)malloc(N*sizeof(int));
-    cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
-    printf("Initially\n");
-    for (int i = 0; i < nextPow2(N); i++) {
-        printf("%d\n", resultt[i]);
-    }
-    printf("\n"); */
+    //initializeResultKernel<<<(N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK>>>(input, result, N);
+    //cudaCheckError(cudaDeviceSynchronize());
 
     // upsweep phase
-    // double startTime2 = CycleTimer::currentSeconds();
     for (int twod = 1; twod < nextPow2var / 2; twod *= 2) {
         int twod1 = twod*2;
         int num_block_iter = ((N/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
@@ -165,38 +153,15 @@ void exclusive_scan(int* input, int N, int* result)
         if (num_block_iter == 1) {
             threads_per_block = (N/twod1);
         }
-        upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result);
+        upsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(N, twod1, twod, result);
         cudaCheckError(cudaDeviceSynchronize());
 
-        // Testing
-        /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
-        printf("Iteration %d \n", twod);
-        for (int i = 0; i < nextPow2(N); i++) {
-            printf("A[%d]=%d\n", i, resultt[i]);
-        }
-        printf("\n"); */
     }
-    // double endTime2 = CycleTimer::currentSeconds(); 
-    // double overallDuration2 = endTime2 - startTime2;
-    // printf("Time upsweep: %.3f ms\n", 1000.f * overallDuration2);
-    
-    // double startTime3 = CycleTimer::currentSeconds();
+
     putZeroInEnd<<<1, 1>>>(result, nextPow2var);
     cudaCheckError(cudaDeviceSynchronize());
-    // double endTime3 = CycleTimer::currentSeconds(); 
-    // double overallDuration3 = endTime3 - startTime3;
-    // printf("Time putZeroInEnd: %.3f ms\n", 1000.f * overallDuration3);
-    
-     // Testing
-    /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
-    printf("End\n");
-    for (int i = 0; i < nextPow2(N); i++) {
-        printf("A[%d]=%d\n", i, resultt[i]);
-    }
-    printf("\n");*/
 
     // downsweep phase
-    // double startTime4 = CycleTimer::currentSeconds();
     for (int twod = nextPow2var / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
         int num_block_iter = ((nextPow2var/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
@@ -207,17 +172,6 @@ void exclusive_scan(int* input, int N, int* result)
         downsweepPhaseKernel<<<num_block_iter, threads_per_block>>>(twod1, twod, result, N);
         cudaCheckError(cudaDeviceSynchronize());
     }
-    // double endTime4 = CycleTimer::currentSeconds(); 
-    // double overallDuration4 = endTime4 - startTime4;
-    // printf("Time downsweep: %.3f ms\n", 1000.f * overallDuration4);
-
-    // Testing
-    /* cudaMemcpy(resultt, result, N * sizeof(int), cudaMemcpyDeviceToHost);
-    printf("End\n");
-    for (int i = 0; i < nextPow2(N); i++) {
-        printf("A[%d]=%d\n", i, resultt[i]);
-    }
-    printf("\n"); */
 }
 
 //
