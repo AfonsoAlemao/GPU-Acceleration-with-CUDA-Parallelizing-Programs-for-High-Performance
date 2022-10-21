@@ -52,7 +52,9 @@ upsweepPhaseKernel(int N,int twod1, int twod, int* result) {
     // blockDim and threadIdx.
     int index = (blockIdx.x * blockDim.x + threadIdx.x) * twod1;
     
-    // Check if we're inside array of size N (not nextpow2(N)). Any other operation is a waste of time 
+    // Check if we're inside array of size N (not nextpow2(N)). 
+    // Use N - 1 instead of N, because last element operation is useless.
+    // Any other operation is a waste of time.
     if (index + twod1 - 1 < N - 1) {
         result[index + twod1 - 1] = result[index + twod - 1] + result[index + twod1 - 1];
     }
@@ -125,7 +127,7 @@ void exclusive_scan(int* input, int N, int* result)
     
     int nextPow2var = nextPow2(N);
 
-    // upsweep phase
+    // Upsweep phase
     for (int twod = 1; twod < nextPow2var / 2; twod *= 2) {
         int twod1 = twod*2;
         int num_block_iter = ((N/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
@@ -140,7 +142,7 @@ void exclusive_scan(int* input, int N, int* result)
     putZeroInEnd<<<1, 1>>>(result, nextPow2var);
     cudaCheckError(cudaDeviceSynchronize());
 
-    // downsweep phase
+    // Downsweep phase
     for (int twod = nextPow2var / 2; twod >= 1; twod /= 2) {
         int twod1 = twod * 2;
         int num_block_iter = ((nextPow2var/twod1) + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
